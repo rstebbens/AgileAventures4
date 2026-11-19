@@ -8,6 +8,8 @@ var mode = "intro"
 var lines = ["DAVE: Halvefords need 1,200 bicycles by Christmas.", "DAVE (to camera): Apparently we have a strategy. Nobody's seen it."]
 var line_index = 0
 var outcome = ""
+var factory_seen = false
+var factory_stage = 0
 var ui: CanvasLayer
 var panel: PanelContainer
 var dialogue: Label
@@ -104,7 +106,9 @@ func _advance():
 
 func _interact(name):
     panel.visible = true
-    if name == "Martin":
+    if name == "Martin" and outcome != "":
+        _say(["MARTIN: We already committed to " + outcome.to_lower() + ". The factory is implementing it.", "DAVE (to camera): Apparently a decision becomes a strategy if you say it confidently enough."])
+    elif name == "Martin":
         _say(["MARTIN: Halvefords want 1,200 bicycles by Christmas. We need to move quickly.", "DAVE: Why 27 gears and not 18?", "MARTIN: A survey of twelve-year-olds suggests more gears are better.", "DAVE: What's the target demographic?", "MARTIN: Middle-aged divorcees. Essentially the same thing.", "DAVE (to camera): You're hearing this too, right?"])
         # Present the decision after the dialogue sequence.
         mode = "martin"
@@ -116,7 +120,9 @@ func _interact(name):
     elif name == "Coffee":
         _say(["DAVE: At least the coffee machine has a clear purpose."])
     elif name == "Dashboard":
-        if outcome == "":
+        if outcome != "" and not factory_seen:
+            _say(["DAVE: First we need to see what is actually happening on the factory floor."])
+        elif outcome == "":
             _say(["DASHBOARD: No strategy selected. No meaningful performance data available."])
         else:
             var result = {"Speed":"Delivery on time. Brakes missing. Customer complaints: catastrophic.", "Comfort":"Premium suspension added. Nobody asked for it. Costs soar.", "Cost":"Basic brakes included. Better brakes available by subscription."}
@@ -139,11 +145,44 @@ func _martin_dialogue(index):
             choices.add_child(b)
 
 func _decide(option):
+    if outcome != "": return
     outcome = option
     var quips = {"Speed":"No brakes. Bold strategy. Shall we tell the customers?", "Comfort":"Suspension? Lovely. Was that in the requirements? Of course not.", "Cost":"Brakes as a subscription. What could possibly go wrong?"}
-    _say(["DAVE (to camera): " + quips[option], "DAVE: Go and inspect the dashboard. Our choices have consequences."])
+    _say(["MARTIN: Great. I\'ll tell the factory to prioritize " + option.to_lower() + ".", "DAVE (to camera): " + quips[option], "DAVE: Perhaps we should visit the assembly line before declaring victory."])
+    mode = "factory_intro"
+    _factory_sequence(0)
+
+func _factory_sequence(index):
+    mode = "factory"
+    factory_stage = index
+    panel.visible = true
+    for child in choices.get_children(): child.queue_free()
+    var scenes = {
+        "Speed": ["FACTORY: The production counter races upward. Workers skip the brake installation station.", "WORKER: We can ship by Friday. Brakes are in the next release.", "DAVE (to camera): A bicycle with no brakes. What could possibly slow us down?"],
+        "Comfort": ["FACTORY: Every bicycle receives oversized premium suspension.", "WORKER: Assembly time doubled. Nobody ordered the suspension, but it is very comfortable.", "DAVE (to camera): We're solving a problem nobody has, at twice the cost."],
+        "Cost": ["FACTORY: Basic brakes are installed. A premium braking subscription is advertised.", "WORKER: The brakes work. Enhanced stopping power is a monthly upgrade.", "DAVE (to camera): We've invented brakes-as-a-service. I wish I were joking."]
+    }
+    var beats = scenes[outcome]
+    dialogue.text = beats[index]
+    if index < beats.size() - 1:
+        var b = Button.new()
+        b.text = "Next factory scene"
+        b.pressed.connect(func(): _factory_sequence(index + 1))
+        choices.add_child(b)
+    else:
+        var b = Button.new()
+        b.text = "Return to boardroom"
+        b.pressed.connect(func():
+            factory_seen = true
+            mode = "explore"
+            panel.visible = false
+        )
+        choices.add_child(b)
 
 func _draw():
+    if mode == "factory":
+        _draw_factory()
+        return
     draw_rect(Rect2(0, 0, 1100, 700), Color("#17212e"))
     draw_rect(Rect2(110, 110, 880, 460), Color("#607e8a"))
     draw_colored_polygon(PackedVector2Array([Vector2(110, 275),Vector2(990, 275),Vector2(990, 570),Vector2(110, 570)]), Color("#b5b4a4"))
@@ -177,3 +216,23 @@ func _person(p, color, label):
 
 func draw_ellipse_placeholder(p):
     draw_circle(p + Vector2(0, 17), 21, Color(0, 0, 0, 0.24))
+
+func _draw_factory():
+    draw_rect(Rect2(0, 0, 1100, 700), Color("#202e3c"))
+    draw_rect(Rect2(65, 120, 970, 400), Color("#526270"))
+    draw_rect(Rect2(90, 360, 920, 110), Color("#303d46"))
+    for i in range(5):
+        var x = 155 + i * 180
+        draw_circle(Vector2(x - 42, 396), 32, Color("#1b2530"))
+        draw_circle(Vector2(x + 42, 396), 32, Color("#1b2530"))
+        draw_line(Vector2(x - 42, 396), Vector2(x, 343), Color("#d3a65c"), 7)
+        draw_line(Vector2(x, 343), Vector2(x + 42, 396), Color("#d3a65c"), 7)
+        draw_line(Vector2(x - 42, 396), Vector2(x + 42, 396), Color("#d3a65c"), 7)
+        if outcome == "Comfort":
+            draw_line(Vector2(x, 343), Vector2(x + 25, 312), Color("#df84e8"), 8)
+        elif outcome == "Cost":
+            draw_string(ThemeDB.fallback_font, Vector2(x - 45, 450), "SUBSCRIBE", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#fff0a5"))
+        else:
+            draw_string(ThemeDB.fallback_font, Vector2(x - 42, 450), "NO BRAKES", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#ffaaaa"))
+    draw_string(ThemeDB.fallback_font, Vector2(110, 180), "HALVEFORDS ASSEMBLY LINE", HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color.WHITE)
+    draw_string(ThemeDB.fallback_font, Vector2(110, 225), "Priority: " + outcome + "   |   Scene " + str(factory_stage + 1) + " / 3", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#d8e5ed"))
