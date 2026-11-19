@@ -1,21 +1,29 @@
-# Agile Adventures 4: The Boardroom
+# Agile Adventures 4
 
-A small playable Godot 4 prototype. Dave is the purple-clad playable coach. Explore a boardroom, question Martin's market research for Halvefords, choose Speed, Comfort or Cost, then inspect the dashboard.
+A Godot 4 prototype of Dave's organizational coaching adventure.
+
+## Current prototype
+- **3D diorama boardroom** with an orthographic isometric camera, modeled furniture, lighting and shadows
+- Dave as the controllable character, Martin as an NPC
+- Arrow keys/WASD to walk; E near an object to interact
+- Mouse/touch to select objects or move toward a point
+- Halvefords' 1,200-bicycle Christmas order, research, dialogue and three choices
+- Decision locked after selection
+- Separate 3D factory reveal for Speed, Comfort or Cost
+- Return to boardroom with updated dashboard and Martin dialogue
 
 ## Run locally
-Install Godot 4.4.1, import `project.godot`, and press F5.
+Install Godot 4.4.1, import `project.godot`, press F5.
 
-## Controls
-- Arrow keys / WASD: move Dave
-- E or Enter near an object: interact
-- Click or tap an object: inspect it
-- Click or tap the floor: walk there (simple direct movement, not full pathfinding)
-- Space or dialogue buttons: advance
+## Web deployment
+The Actions workflow exports the Godot web build. In Settings → Pages select GitHub Actions as deployment source.
 
-## Browser deployment
-The GitHub Actions workflow exports the game for Web and deploys it to GitHub Pages. In repository Settings → Pages, choose **GitHub Actions** as the build and deployment source.
+## Visual fidelity
+This is a **procedural 3D blockout**, not the finished high-fidelity diorama. The reference aesthetic requires authored 3D assets, refined materials, character models and animation. The factory reveal is still dialogue-driven, not a cinematic animation. The build has not yet been playtested in the Godot editor.
 
-Expected URL after successful deployment: https://rstebbens.github.io/AgileAventures4/
-
-## Status
-This is an untested first prototype. Visuals are placeholder code-drawn 2D, not yet true isometric tiles or animated sprites. Mobile controls and collision/pathfinding need refinement.
+## Next steps
+1. Validate the Godot build and interaction behavior.
+2. Replace blockout geometry with detailed low-poly / stylized 3D assets.
+3. Model Dave and Martin with expressive rigs and fourth-wall animations.
+4. Add camera transitions and an animated factory conveyor sequence.
+5. Improve mobile controls, navigation around furniture and replay UX.
