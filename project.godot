@@ -2,7 +2,7 @@ config_version=5
 
 [application]
 config/name="Agile Adventures 4 - Boardroom Prototype"
-run/main_scene="res://scenes/boardroom.tscn"
+run/main_scene="res://scenes/diorama.tscn"
 
 [display]
 window/size/viewport_width=1100
