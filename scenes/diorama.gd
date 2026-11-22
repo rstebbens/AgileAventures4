@@ -4,6 +4,10 @@ extends Node3D
 # decision lock and a factory reveal. Meshes are temporary until authored assets arrive.
 const WALK_SPEED := 3.0
 var dave: CharacterBody3D
+var dave_art: Node3D
+var walk_clock := 0.0
+var idle_clock := 0.0
+var emote := "neutral"
 var martin: Node3D
 var camera: Camera3D
 var target := Vector3.ZERO
@@ -160,7 +164,7 @@ func _make_boardroom() -> void:
     body_shape.shape = capsule
     body_shape.position.y = 0.85
     dave.add_child(body_shape)
-    _character(dave,Vector3.ZERO,palette["purple"])
+    dave_art = _make_dave(dave)
     martin = _character(boardroom_root,Vector3(3.35,0.06,0.8),Color("#3d7564"))
     objects["Martin"] = martin.position
     objects["Dashboard"] = Vector3(2.55,0,-2.15)
@@ -212,6 +216,160 @@ func _chair(at: Vector3, facing_front: bool) -> void:
     for x in [-0.25,0.25]:
         for z in [-0.22,0.22]:
             _block(boardroom_root,at+Vector3(x,0.22,z),Vector3(0.045,0.44,0.045),palette["metal"])
+
+func _joint(parent: Node3D, name_: String, at: Vector3) -> Node3D:
+    var joint := Node3D.new()
+    joint.name = name_
+    joint.position = at
+    parent.add_child(joint)
+    return joint
+
+func _ink(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color) -> void:
+    var rod := MeshInstance3D.new()
+    var mesh := CylinderMesh.new()
+    mesh.top_radius = radius
+    mesh.bottom_radius = radius
+    mesh.height = a.distance_to(b)
+    rod.mesh = mesh
+    rod.material_override = _material(color)
+    parent.add_child(rod)
+    rod.position = (a+b)*0.5
+    var axis := (b-a).normalized()
+    var helper := Vector3.RIGHT if absf(axis.dot(Vector3.FORWARD)) > 0.95 else Vector3.FORWARD
+    var right := axis.cross(helper).normalized()
+    rod.basis = Basis(right,axis,right.cross(axis).normalized())
+
+func _make_dave(parent: Node3D) -> Node3D:
+    var ink := Color("#221b24")
+    var skin := Color("#ffcd92")
+    var root := _joint(parent,"DaveArt",Vector3.ZERO)
+    var upper := _joint(root,"Upper",Vector3.ZERO)
+    var shirt := _block(upper,Vector3(0,0.91,0),Vector3(0.57,0.51,0.25),ink)
+    _block(upper,Vector3(0,0.91,0.018),Vector3(0.51,0.45,0.25),Color("#87428e"))
+    var head := _joint(upper,"Head",Vector3(0,1.48,0))
+    var outline := _sphere(head,Vector3.ZERO,0.39,ink)
+    outline.scale.z = 0.76
+    var face := _sphere(head,Vector3(0,0,0.025),0.365,skin)
+    face.scale.z = 0.78
+    for k in range(4):
+        var spike := _block(head,Vector3(-0.19+k*0.115,0.34+0.025*(k%2),0.02),Vector3(0.095,0.15,0.12),ink)
+        spike.rotation.z = -0.5+0.24*k
+    for side in [-1,1]:
+        var eye := _sphere(head,Vector3(side*0.115,0.035,0.282),0.045,ink)
+        eye.scale = Vector3(0.8,1.35,0.45)
+        var brow := _joint(head,"BrowL" if side == -1 else "BrowR",Vector3(side*0.115,0.16,0.26))
+        _ink(brow,Vector3(-0.06,-0.012,0),Vector3(0,0.012,0.008),0.013,ink)
+        _ink(brow,Vector3(0,0.012,0.008),Vector3(0.06,-0.012,0),0.013,ink)
+    for mood in ["neutral","happy","sad","open"]:
+        var mouth := _joint(head,"Mouth_"+mood,Vector3(0,-0.12,0.275))
+        if mood == "open":
+            var grin := _sphere(mouth,Vector3.ZERO,0.1,ink)
+            grin.scale = Vector3(1.2,0.63,0.25)
+            var tongue := _sphere(mouth,Vector3(0,-0.027,0.023),0.045,Color("#e48c88"))
+            tongue.scale = Vector3(1.3,0.45,0.35)
+        else:
+            var depth := -0.045 if mood == "sad" else 0.045
+            for k in range(8):
+                var t := -1.0+k*0.25
+                var u := t+0.25
+                _ink(mouth,Vector3(t*0.11,depth*t*t-depth,0),Vector3(u*0.11,depth*u*u-depth,0),0.014,ink)
+        mouth.visible = mood == "neutral"
+    for side in [-1,1]:
+        var leg := _joint(root,"LegL" if side == -1 else "LegR",Vector3(side*0.15,0.68,0))
+        _ink(leg,Vector3.ZERO,Vector3(0,-0.61,0),0.037,ink)
+        _sphere(leg,Vector3(0,-0.61,0.035),0.055,ink)
+        var arm := _joint(upper,"ArmL" if side == -1 else "ArmR",Vector3(side*0.28,1.1,0))
+        _ink(arm,Vector3.ZERO,Vector3(side*0.085,-0.23,0),0.031,ink)
+        var elbow := _joint(arm,"Elbow",Vector3(side*0.085,-0.23,0))
+        _ink(elbow,Vector3.ZERO,Vector3(0,-0.23,0),0.031,ink)
+        _sphere(elbow,Vector3(0,-0.24,0),0.045,ink)
+    root.rotation.y = 0.78
+    return root
+
+func _pose_dave(state: String, dt: float) -> void:
+    if not is_instance_valid(dave_art):
+        return
+    var upper := dave_art.get_node("Upper") as Node3D
+    var head := upper.get_node("Head") as Node3D
+    var left := upper.get_node("ArmL") as Node3D
+    var right := upper.get_node("ArmR") as Node3D
+    var ll := dave_art.get_node("LegL") as Node3D
+    var rl := dave_art.get_node("LegR") as Node3D
+    var re := right.get_node("Elbow") as Node3D
+    var le := left.get_node("Elbow") as Node3D
+    var swing := 0.0
+    var mouth := "neutral"
+    var l := Vector3(0,0,-0.12)
+    var r := Vector3(0,0,0.12)
+    var elbow := Vector3.ZERO
+    var tilt := 0.0
+    var brows := 0.0
+    if state == "walk":
+        walk_clock += dt*10.0
+        swing = sin(walk_clock)*0.53
+    elif state == "welcome":
+        mouth = "open"
+        r.z = 2.1+sin(idle_clock*8)*0.22
+        elbow.z = 0.35
+    elif state == "thinking":
+        mouth = "sad"
+        r.x = -0.85
+        r.z = -0.16
+        elbow.x = -1.45
+        tilt = 0.12
+        brows = 0.23
+    elif state == "idea" or state == "thumbs":
+        mouth = "open"
+        r.z = 1.9
+        elbow.z = 0.45
+    elif state == "confused":
+        mouth = "sad"
+        r.z = 2.2
+        elbow.z = -0.85
+        tilt = -0.15
+        brows = 0.28
+    elif state == "sad":
+        mouth = "sad"
+        tilt = 0.08
+        brows = 0.35
+    elif state == "frustrated":
+        mouth = "sad"
+        brows = -0.45
+        r.x = -0.55
+        l.x = -0.55
+        r.z = -0.45
+        l.z = 0.45
+        elbow.x = -0.8
+    l.x += swing
+    r.x -= swing
+    var blend := minf(dt*13.0,1.0)
+    left.rotation = left.rotation.lerp(l,blend)
+    right.rotation = right.rotation.lerp(r,blend)
+    re.rotation = re.rotation.lerp(elbow,blend)
+    le.rotation = le.rotation.lerp(Vector3(-0.8,0,0) if state == "frustrated" else Vector3.ZERO,blend)
+    ll.rotation.x = lerpf(ll.rotation.x,-swing,blend)
+    rl.rotation.x = lerpf(rl.rotation.x,swing,blend)
+    upper.position.y = lerpf(upper.position.y,absf(swing)*0.075,blend)
+    head.rotation.z = lerpf(head.rotation.z,tilt,blend)
+    (head.get_node("BrowL") as Node3D).rotation.z = lerpf((head.get_node("BrowL") as Node3D).rotation.z,brows,blend)
+    (head.get_node("BrowR") as Node3D).rotation.z = lerpf((head.get_node("BrowR") as Node3D).rotation.z,-brows,blend)
+    for mood in ["neutral","happy","sad","open"]:
+        (head.get_node("Mouth_"+mood) as Node3D).visible = mood == mouth
+
+func _dialogue_emote() -> void:
+    var words := message.text.to_lower()
+    emote = "neutral"
+    if "to camera" in words or "demographic" in words:
+        emote = "confused"
+        dave_art.rotation.y = 0.78
+    elif "sample size" in words or "research" in words:
+        emote = "thinking"
+    elif "removed" in words or "no brakes" in words:
+        emote = "frustrated"
+    elif "nobody" in words:
+        emote = "sad"
+    elif "coffee" in words:
+        emote = "welcome"
 
 func _character(parent: Node3D, at: Vector3, clothing: Color) -> Node3D:
     var root = Node3D.new()
@@ -305,6 +463,7 @@ func _say(lines: Array[String], next_phase: String = "explore") -> void:
 
 func _show_line() -> void:
     message.text = dialogue_lines[line_number]
+    _dialogue_emote()
     _buttons(["Continue"], func(_unused): _advance())
 
 func _advance() -> void:
@@ -379,6 +538,7 @@ func _factory_beat() -> void:
 
 func _physics_process(delta: float) -> void:
     if phase != "explore":
+        _pose_dave(emote,delta)
         return
     var move := Vector3.ZERO
     if Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A): move.x -= 1
@@ -394,15 +554,29 @@ func _physics_process(delta: float) -> void:
             auto_walk = false
             move = Vector3.ZERO
     if move.length() > 0:
+        var previous := dave.position
         dave.velocity = move.normalized() * WALK_SPEED
         dave.move_and_slide()
         dave.position.x = clampf(dave.position.x, -4.55, 4.55)
         dave.position.z = clampf(dave.position.z, -2.9, 3.1)
-        dave.get_child(1).rotation.y = atan2(move.x, move.z)
+        dave_art.rotation.y = lerp_angle(dave_art.rotation.y,atan2(move.x,move.z),minf(delta*12,1.0))
+        if dave.position.distance_to(previous) > 0.002:
+            idle_clock = 0.0
+            _pose_dave("walk",delta)
+        else:
+            _pose_dave("neutral",delta)
         if auto_walk and dave.get_slide_collision_count() > 0:
             auto_walk = false
     else:
         dave.velocity = Vector3.ZERO
+        idle_clock += delta
+        var cycle := fmod(idle_clock,12.0)
+        var state := "neutral"
+        if cycle > 3.0 and cycle < 5.5: state = "welcome"
+        elif cycle > 7.0 and cycle < 10.0: state = "thinking"
+        if state != "neutral":
+            dave_art.rotation.y = lerp_angle(dave_art.rotation.y,0.78,minf(delta*5,1.0))
+        _pose_dave(state,delta)
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
