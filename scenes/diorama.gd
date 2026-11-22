@@ -239,50 +239,75 @@ func _ink(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color) -
     var right := axis.cross(helper).normalized()
     rod.basis = Basis(right,axis,right.cross(axis).normalized())
 
+func _oval(parent: Node3D, at: Vector3, dimensions: Vector3, color: Color) -> MeshInstance3D:
+    var piece := _sphere(parent,at,0.5,color)
+    piece.scale = dimensions
+    return piece
+
+func _soft_limb(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color) -> void:
+    var piece := MeshInstance3D.new()
+    var mesh := CapsuleMesh.new()
+    mesh.radius = radius
+    mesh.height = a.distance_to(b)+radius*2.0
+    piece.mesh = mesh
+    piece.material_override = _material(color,0.72)
+    parent.add_child(piece)
+    piece.position = (a+b)*0.5
+    var axis := (b-a).normalized()
+    var helper := Vector3.RIGHT if absf(axis.dot(Vector3.FORWARD)) > 0.95 else Vector3.FORWARD
+    var right := axis.cross(helper).normalized()
+    piece.basis = Basis(right,axis,right.cross(axis).normalized())
+
 func _make_dave(parent: Node3D) -> Node3D:
-    var ink := Color("#221b24")
-    var skin := Color("#ffcd92")
+    var ink := Color("#30282a")
+    var skin := Color("#eeb17c")
+    var hair_color := Color("#563124")
     var root := _joint(parent,"DaveArt",Vector3.ZERO)
     var upper := _joint(root,"Upper",Vector3.ZERO)
-    var shirt := _block(upper,Vector3(0,0.91,0),Vector3(0.57,0.51,0.25),ink)
-    _block(upper,Vector3(0,0.91,0.018),Vector3(0.51,0.45,0.25),Color("#87428e"))
-    var head := _joint(upper,"Head",Vector3(0,1.48,0))
-    var outline := _sphere(head,Vector3.ZERO,0.39,ink)
-    outline.scale.z = 0.76
-    var face := _sphere(head,Vector3(0,0,0.025),0.365,skin)
-    face.scale.z = 0.78
-    for k in range(4):
-        var spike := _block(head,Vector3(-0.19+k*0.115,0.34+0.025*(k%2),0.02),Vector3(0.095,0.15,0.12),ink)
-        spike.rotation.z = -0.5+0.24*k
+    # Rounded, continuous purple tunic, not a flat outlined rectangle.
+    var shirt := _oval(upper,Vector3(0,0.91,0),Vector3(0.54,0.64,0.37),Color("#80368e"))
+    var neck := _oval(upper,Vector3(0,1.2,0),Vector3(0.19,0.15,0.19),skin)
+    var head := _joint(upper,"Head",Vector3(0,1.55,0))
+    _oval(head,Vector3.ZERO,Vector3(0.77,0.75,0.70),skin)
+    # Hair is a sculpted crown/back cap, with exposed skin on either side.
+    _oval(head,Vector3(0,0.11,-0.13),Vector3(0.77,0.62,0.54),hair_color)
+    for k in range(9):
+        var angle := float(k)*TAU/9.0
+        var lock := _oval(head,Vector3(sin(angle)*0.26,0.29+0.035*sin(angle*3),cos(angle)*0.22-0.04),Vector3(0.21,0.26,0.20),hair_color)
+        lock.rotation.z = -sin(angle)*0.65
+        lock.rotation.x = cos(angle)*0.55
+    _oval(head,Vector3(-0.10,0.39,-0.015),Vector3(0.19,0.23,0.19),hair_color).rotation.z = 0.35
+    _oval(head,Vector3(0.075,0.38,-0.075),Vector3(0.22,0.25,0.21),hair_color).rotation.z = -0.42
     for side in [-1,1]:
-        var eye := _sphere(head,Vector3(side*0.115,0.035,0.282),0.045,ink)
-        eye.scale = Vector3(0.8,1.35,0.45)
-        var brow := _joint(head,"BrowL" if side == -1 else "BrowR",Vector3(side*0.115,0.16,0.26))
-        _ink(brow,Vector3(-0.06,-0.012,0),Vector3(0,0.012,0.008),0.013,ink)
-        _ink(brow,Vector3(0,0.012,0.008),Vector3(0.06,-0.012,0),0.013,ink)
+        _oval(head,Vector3(side*0.36,-0.025,-0.015),Vector3(0.105,0.15,0.105),skin)
+        var eye := _oval(head,Vector3(side*0.12,0.015,0.331),Vector3(0.082,0.125,0.045),ink)
+        var brow := _joint(head,"BrowL" if side == -1 else "BrowR",Vector3(side*0.13,0.15,0.31))
+        _soft_limb(brow,Vector3(-0.045,-0.008,-0.005),Vector3(0.0,0.012,0.012),0.018,hair_color)
+        _soft_limb(brow,Vector3(0.0,0.012,0.012),Vector3(0.045,-0.008,-0.005),0.018,hair_color)
     for mood in ["neutral","happy","sad","open"]:
-        var mouth := _joint(head,"Mouth_"+mood,Vector3(0,-0.12,0.275))
+        var mouth := _joint(head,"Mouth_"+mood,Vector3(0,-0.13,0.325))
         if mood == "open":
-            var grin := _sphere(mouth,Vector3.ZERO,0.1,ink)
-            grin.scale = Vector3(1.2,0.63,0.25)
-            var tongue := _sphere(mouth,Vector3(0,-0.027,0.023),0.045,Color("#e48c88"))
-            tongue.scale = Vector3(1.3,0.45,0.35)
+            _oval(mouth,Vector3.ZERO,Vector3(0.23,0.12,0.043),ink)
+            _oval(mouth,Vector3(0,-0.035,0.019),Vector3(0.10,0.036,0.021),Color("#d77e79"))
         else:
-            var depth := -0.045 if mood == "sad" else 0.045
+            var depth := -0.04 if mood == "sad" else 0.05
             for k in range(8):
                 var t := -1.0+k*0.25
                 var u := t+0.25
-                _ink(mouth,Vector3(t*0.11,depth*t*t-depth,0),Vector3(u*0.11,depth*u*u-depth,0),0.014,ink)
+                _ink(mouth,Vector3(t*0.105,depth*t*t-depth,-0.025*t*t),Vector3(u*0.105,depth*u*u-depth,-0.025*u*u),0.012,ink)
         mouth.visible = mood == "neutral"
     for side in [-1,1]:
-        var leg := _joint(root,"LegL" if side == -1 else "LegR",Vector3(side*0.15,0.68,0))
-        _ink(leg,Vector3.ZERO,Vector3(0,-0.61,0),0.037,ink)
-        _sphere(leg,Vector3(0,-0.61,0.035),0.055,ink)
-        var arm := _joint(upper,"ArmL" if side == -1 else "ArmR",Vector3(side*0.28,1.1,0))
-        _ink(arm,Vector3.ZERO,Vector3(side*0.085,-0.23,0),0.031,ink)
-        var elbow := _joint(arm,"Elbow",Vector3(side*0.085,-0.23,0))
-        _ink(elbow,Vector3.ZERO,Vector3(0,-0.23,0),0.031,ink)
-        _sphere(elbow,Vector3(0,-0.24,0),0.045,ink)
+        var leg := _joint(root,"LegL" if side == -1 else "LegR",Vector3(side*0.135,0.66,0))
+        _soft_limb(leg,Vector3.ZERO,Vector3(0,-0.29,0),0.073,ink)
+        var knee := _joint(leg,"Knee",Vector3(0,-0.29,0))
+        _soft_limb(knee,Vector3.ZERO,Vector3(0,-0.25,0),0.063,ink)
+        _oval(knee,Vector3(0,-0.29,0.065),Vector3(0.18,0.14,0.30),ink)
+        var arm := _joint(upper,"ArmL" if side == -1 else "ArmR",Vector3(side*0.23,1.13,0))
+        _soft_limb(arm,Vector3.ZERO,Vector3(side*0.075,-0.22,0),0.067,ink)
+        var elbow := _joint(arm,"Elbow",Vector3(side*0.075,-0.22,0))
+        _soft_limb(elbow,Vector3.ZERO,Vector3(0,-0.20,0),0.058,ink)
+        _oval(elbow,Vector3(0,-0.245,0),Vector3(0.15,0.17,0.13),skin)
+        _oval(elbow,Vector3(-side*0.065,-0.22,0.025),Vector3(0.075,0.10,0.08),skin)
     root.rotation.y = 0.78
     return root
 
@@ -349,7 +374,14 @@ func _pose_dave(state: String, dt: float) -> void:
     le.rotation = le.rotation.lerp(Vector3(-0.8,0,0) if state == "frustrated" else Vector3.ZERO,blend)
     ll.rotation.x = lerpf(ll.rotation.x,-swing,blend)
     rl.rotation.x = lerpf(rl.rotation.x,swing,blend)
-    upper.position.y = lerpf(upper.position.y,absf(swing)*0.075,blend)
+    var lk := ll.get_node("Knee") as Node3D
+    var rk := rl.get_node("Knee") as Node3D
+    lk.rotation.x = lerpf(lk.rotation.x,maxf(0.0,swing)*0.85,blend)
+    rk.rotation.x = lerpf(rk.rotation.x,maxf(0.0,-swing)*0.85,blend)
+    if state == "walk":
+        re.rotation.x = lerpf(re.rotation.x,-0.18-maxf(swing,0.0)*0.22,blend)
+        le.rotation.x = lerpf(le.rotation.x,-0.18-maxf(-swing,0.0)*0.22,blend)
+    upper.position.y = lerpf(upper.position.y,absf(swing)*0.055,blend)
     head.rotation.z = lerpf(head.rotation.z,tilt,blend)
     (head.get_node("BrowL") as Node3D).rotation.z = lerpf((head.get_node("BrowL") as Node3D).rotation.z,brows,blend)
     (head.get_node("BrowR") as Node3D).rotation.z = lerpf((head.get_node("BrowR") as Node3D).rotation.z,-brows,blend)
