@@ -64,10 +64,10 @@ func _setup_world() -> void:
     camera = Camera3D.new()
     camera.projection = Camera3D.PROJECTION_ORTHOGONAL
     camera.size = 14.5
-    camera.position = Vector3(11, 13, 15)
-    camera.look_at(Vector3(0, 0, 0))
-    camera.current = true
     add_child(camera)
+    camera.position = Vector3(11, 13, 15)
+    camera.look_at(Vector3(0, 1.0, 0), Vector3.UP)
+    camera.make_current()
 
 func _material(color: Color, roughness := 0.85) -> StandardMaterial3D:
     var mat := StandardMaterial3D.new()
@@ -172,13 +172,17 @@ func _make_ui() -> void:
     title_label.position = Vector2(18, 15)
     title_label.add_theme_color_override("font_color", Color("#252a31"))
     layer.add_child(title_label)
+    var hud := Control.new()
+    layer.add_child(hud)
+    hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
     panel = PanelContainer.new()
-    panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+    hud.add_child(panel)
+    panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
     panel.offset_left = 35
     panel.offset_right = -35
     panel.offset_top = -165
     panel.offset_bottom = -20
-    layer.add_child(panel)
     var stack := VBoxContainer.new()
     panel.add_child(stack)
     message = Label.new()
@@ -261,7 +265,7 @@ func _start_factory() -> void:
         "Comfort": ["FACTORY: Premium suspension is fitted to every bicycle.", "WORKER: Nobody asked for it, and production takes twice as long.", "DAVE (to camera): We're solving a problem nobody has."],
         "Cost": ["FACTORY: Every bicycle receives basic working brakes.", "WORKER: Better stopping power is available on subscription.", "DAVE (to camera): Brakes as a service. Of course."]
     }
-    dialogue_lines = consequences[choice]
+    dialogue_lines.assign(consequences[choice])
     line_number = 0
     _factory_beat()
 
