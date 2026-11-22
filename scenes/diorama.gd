@@ -3,7 +3,7 @@ extends Node3D
 # Procedural 3D vertical slice: fixed orthographic camera, walkable boardroom,
 # decision lock and a factory reveal. Meshes are temporary until authored assets arrive.
 const WALK_SPEED := 3.0
-var dave: Node3D
+var dave: CharacterBody3D
 var martin: Node3D
 var camera: Camera3D
 var target := Vector3.ZERO
@@ -53,19 +53,19 @@ func _setup_world() -> void:
     env.background_color = Color("#d4c3ae")
     env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
     env.ambient_light_color = Color("#fff2df")
-    env.ambient_light_energy = 0.75
+    env.ambient_light_energy = 0.43
     environment.environment = env
     add_child(environment)
     var sun := DirectionalLight3D.new()
     sun.rotation_degrees = Vector3(-52, -34, 0)
-    sun.light_energy = 1.35
+    sun.light_energy = 0.68
     sun.shadow_enabled = true
     add_child(sun)
     camera = Camera3D.new()
     camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-    camera.size = 14.5
+    camera.size = 13.5
     add_child(camera)
-    camera.position = Vector3(11, 13, 15)
+    camera.position = Vector3(14, 13, 14)
     camera.look_at(Vector3(0, 1.0, 0), Vector3.UP)
     camera.make_current()
 
@@ -100,53 +100,145 @@ func _make_boardroom() -> void:
     boardroom_root = Node3D.new()
     boardroom_root.name = "Boardroom"
     add_child(boardroom_root)
-    _block(boardroom_root, Vector3(0, -0.24, 0), Vector3(10.5, 0.45, 7.5), palette["floor"])
-    _block(boardroom_root, Vector3(0, 1.8, -3.72), Vector3(10.5, 3.6, 0.22), palette["wall"])
-    _block(boardroom_root, Vector3(-5.23, 1.8, 0), Vector3(0.22, 3.6, 7.5), palette["wall"])
-    _block(boardroom_root, Vector3(0, 3.64, -3.72), Vector3(10.7, 0.2, 0.35), palette["wood_dark"])
-    _block(boardroom_root, Vector3(-5.23, 3.64, 0), Vector3(0.35, 0.2, 7.6), palette["wood_dark"])
-    # Window frames and glass-like panes on the back wall.
-    for x in [-3.8, -2.6]:
-        _block(boardroom_root, Vector3(x, 2.15, -3.57), Vector3(1.02, 1.5, 0.06), Color("#b7d3d0"))
-        _block(boardroom_root, Vector3(x, 2.15, -3.51), Vector3(0.07, 1.6, 0.09), palette["wood_dark"])
-        _block(boardroom_root, Vector3(x, 2.15, -3.49), Vector3(1.1, 0.07, 0.09), palette["wood_dark"])
-    # Table: top and four legs.
-    _block(boardroom_root, Vector3(0, 0.85, 0.3), Vector3(4.4, 0.18, 1.75), palette["wood"])
-    for x in [-1.85, 1.85]:
-        for z in [-0.35, 0.95]:
-            _block(boardroom_root, Vector3(x, 0.42, z), Vector3(0.13, 0.8, 0.13), palette["wood_dark"])
-    for x in [-1.5, 0.0, 1.5]:
-        for z in [-1.25, 1.85]:
-            _chair(Vector3(x, 0, z), z > 0)
-    # Bookcase, television, console and small props.
-    _block(boardroom_root, Vector3(4.35, 1.3, -3.25), Vector3(1.3, 2.6, 0.7), palette["wood"])
-    for y in [0.55, 1.25, 1.95]:
-        _block(boardroom_root, Vector3(4.35, y, -2.86), Vector3(1.15, 0.08, 0.65), palette["wood_dark"])
-    _block(boardroom_root, Vector3(1.4, 2.1, -3.54), Vector3(2.45, 1.45, 0.12), Color("#1e2833"))
-    _block(boardroom_root, Vector3(1.4, 2.1, -3.46), Vector3(2.24, 1.25, 0.03), Color("#3c6071"))
-    _block(boardroom_root, Vector3(-3.7, 0.5, 2.6), Vector3(0.9, 1.0, 0.8), palette["wood_dark"])
-    _block(boardroom_root, Vector3(-3.7, 1.08, 2.6), Vector3(0.5, 0.25, 0.5), Color("#b4b3ac"))
-    _block(boardroom_root, Vector3(-0.8, 0.99, 0.15), Vector3(0.62, 0.03, 0.42), palette["paper"])
-    _block(boardroom_root, Vector3(0.7, 1.01, 0.1), Vector3(0.55, 0.04, 0.38), Color("#d2b88e"))
-    dave = _character(boardroom_root, Vector3(-3.3, 0, 1.35), palette["purple"])
-    martin = _character(boardroom_root, Vector3(2.7, 0, 0.8), Color("#3d7564"))
+    _block(boardroom_root, Vector3(0,-0.24,0), Vector3(10.5,0.45,7.5), Color("#54483e"))
+    for i in range(10):
+        for j in range(7):
+            _block(boardroom_root, Vector3(-4.725+i*1.05,0.015,-3.21+j*1.07), Vector3(1.035,0.06,1.055), Color("#a99b87") if (i+j)%2 == 0 else Color("#a39785"))
+    # Genuine apertures in the back wall, built from separate masonry pieces.
+    _block(boardroom_root, Vector3(0,0.45,-3.72), Vector3(10.5,0.9,0.25), palette["wall"])
+    _block(boardroom_root, Vector3(0,3.3,-3.72), Vector3(10.5,0.6,0.25), palette["wall"])
+    for item in [Vector2(-4.795,0.91),Vector2(-2.65,0.62),Vector2(2.145,6.21)]:
+        _block(boardroom_root, Vector3(item.x,1.95,-3.72), Vector3(item.y,2.1,0.25), palette["wall"])
+    for x in [-3.65,-1.65]:
+        _window(x)
+    _block(boardroom_root, Vector3(-5.23,1.8,0), Vector3(0.24,3.6,7.5), palette["wall"])
+    _block(boardroom_root, Vector3(0,3.64,-3.72), Vector3(10.7,0.2,0.35), palette["wood_dark"])
+    _block(boardroom_root, Vector3(-5.23,3.64,0), Vector3(0.35,0.2,7.6), palette["wood_dark"])
+    for i in range(23):
+        _block(boardroom_root,Vector3(-5.08,1.8,-3.55+i*0.31),Vector3(0.08,3.5,0.23),Color("#b58c66"))
+    _block(boardroom_root,Vector3(0,0.85,0.3),Vector3(4.4,0.18,1.75),palette["wood"])
+    _block(boardroom_root,Vector3(0,0.73,0.3),Vector3(4.3,0.1,1.65),palette["wood_dark"])
+    _obstacle(Vector3(0,0.55,0.3),Vector3(4.4,1.1,1.75))
+    for x in [-1.85,1.85]:
+        for z in [-0.35,0.95]:
+            _block(boardroom_root,Vector3(x,0.42,z),Vector3(0.12,0.8,0.12),palette["wood_dark"])
+    for x in [-1.5,0.0,1.5]:
+        for z in [-1.25,1.85]:
+            _chair(Vector3(x,0,z),z>0)
+    for x in [0.8,4.35]:
+        _bookcase(x)
+    _block(boardroom_root,Vector3(2.55,0.4,-3.22),Vector3(2.25,0.8,0.85),palette["wood_dark"])
+    _obstacle(Vector3(2.55,0.4,-3.22),Vector3(2.25,0.8,0.85))
+    _block(boardroom_root,Vector3(2.55,2.05,-3.53),Vector3(2.2,1.35,0.14),Color("#20262c"))
+    _block(boardroom_root,Vector3(2.55,2.05,-3.44),Vector3(2.04,1.19,0.025),Color("#304957"))
+    for i in range(5):
+        _block(boardroom_root,Vector3(1.85+i*0.32,1.65+i*0.07,-3.41),Vector3(0.18,0.24+i*0.14,0.025),Color("#8bb5ae"))
+    _block(boardroom_root,Vector3(-3.7,0.5,2.6),Vector3(0.9,1.0,0.8),palette["wood_dark"])
+    _obstacle(Vector3(-3.7,0.5,2.6),Vector3(0.9,1.0,0.8))
+    _block(boardroom_root,Vector3(-3.7,1.23,2.6),Vector3(0.55,0.46,0.48),Color("#333940"))
+    _block(boardroom_root,Vector3(-3.7,1.19,2.88),Vector3(0.32,0.19,0.09),Color("#92999b"))
+    for x in [-1.25,1.15]:
+        _block(boardroom_root,Vector3(x,0.97,0.1),Vector3(0.65,0.045,0.46),Color("#aeb5ba"))
+        var screen = _block(boardroom_root,Vector3(x,1.21,-0.11),Vector3(0.65,0.45,0.045),Color("#b6bec3"))
+        screen.rotation_degrees.x = -12
+    _block(boardroom_root,Vector3(0,0.96,0.5),Vector3(0.45,0.025,0.32),palette["paper"])
+    var clock = _sphere(boardroom_root,Vector3(-2.45,2.65,-3.53),0.25,Color("#51443a"))
+    clock.scale.z = 0.14
+    for i in range(12):
+        var angle = i*TAU/12.0
+        _block(boardroom_root,Vector3(-2.45+sin(angle)*0.19,2.65+cos(angle)*0.19,-3.48),Vector3(0.025,0.025,0.025),Color.WHITE)
+    _block(boardroom_root,Vector3(-2.45,2.72,-3.46),Vector3(0.025,0.15,0.025),Color.WHITE)
+    _block(boardroom_root,Vector3(-2.38,2.65,-3.46),Vector3(0.14,0.025,0.025),Color.WHITE)
+    dave = CharacterBody3D.new()
+    boardroom_root.add_child(dave)
+    dave.position = Vector3(-3.3,0.06,1.35)
+    dave.motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
+    var body_shape = CollisionShape3D.new()
+    var capsule = CapsuleShape3D.new()
+    capsule.radius = 0.28
+    capsule.height = 1.65
+    body_shape.shape = capsule
+    body_shape.position.y = 0.85
+    dave.add_child(body_shape)
+    _character(dave,Vector3.ZERO,palette["purple"])
+    martin = _character(boardroom_root,Vector3(3.35,0.06,0.8),Color("#3d7564"))
+    objects["Martin"] = martin.position
+    objects["Dashboard"] = Vector3(2.55,0,-2.15)
+    _obstacle(martin.position+Vector3(0,0.85,0),Vector3(0.65,1.7,0.65))
+
+func _obstacle(at: Vector3, size: Vector3) -> void:
+    var body = StaticBody3D.new()
+    boardroom_root.add_child(body)
+    body.position = at
+    var shape = CollisionShape3D.new()
+    var box = BoxShape3D.new()
+    box.size = size
+    shape.shape = box
+    body.add_child(shape)
+
+func _window(x: float) -> void:
+    var frame = Color("#74583e")
+    # Bright exterior set behind the aperture, leaving the wall opening intact.
+    _block(boardroom_root,Vector3(x,1.95,-3.91),Vector3(1.35,2.08,0.04),Color("#bfd5df"))
+    for dx in [-0.69,0.69,0.0]:
+        _block(boardroom_root,Vector3(x+dx,1.95,-3.63),Vector3(0.065,2.1,0.16),frame)
+    for y in [0.9,1.95,3.0]:
+        _block(boardroom_root,Vector3(x,y,-3.63),Vector3(1.43,0.07,0.16),frame)
+    _block(boardroom_root,Vector3(x,0.87,-3.49),Vector3(1.55,0.09,0.42),frame)
+    for i in range(15):
+        var slat = _block(boardroom_root,Vector3(x,2.96-i*0.065,-3.46),Vector3(1.42,0.035,0.13),Color("#d4c5aa"))
+        slat.rotation_degrees.x = 22
+
+func _bookcase(x: float) -> void:
+    var z = -3.2
+    _obstacle(Vector3(x,1.35,z),Vector3(1.1,2.7,0.76))
+    _block(boardroom_root,Vector3(x,1.35,z-0.33),Vector3(1.1,2.7,0.09),palette["wood_dark"])
+    for dx in [-0.51,0.51]:
+        _block(boardroom_root,Vector3(x+dx,1.35,z),Vector3(0.08,2.7,0.75),palette["wood"])
+    for y in [0.12,0.75,1.4,2.05,2.65]:
+        _block(boardroom_root,Vector3(x,y,z),Vector3(1.1,0.09,0.75),palette["wood"])
+    var colors = [Color("#895b46"),Color("#657e71"),Color("#d1b780"),Color("#54697b")]
+    for row in range(3):
+        for i in range(6):
+            var h = 0.26+0.035*((i+row)%4)
+            _block(boardroom_root,Vector3(x-0.36+i*0.13,0.8+row*0.65+h/2,z+0.1),Vector3(0.11,h,0.28),colors[(i+row)%4])
 
 func _chair(at: Vector3, facing_front: bool) -> void:
-    _block(boardroom_root, at + Vector3(0, 0.45, 0), Vector3(0.65, 0.13, 0.58), palette["chair"])
-    var back_z := 0.28 if facing_front else -0.28
-    _block(boardroom_root, at + Vector3(0, 0.95, back_z), Vector3(0.65, 1.05, 0.13), palette["chair"])
-    _block(boardroom_root, at + Vector3(0, 0.2, 0), Vector3(0.1, 0.4, 0.1), palette["metal"])
+    var back_z = 0.28 if facing_front else -0.28
+    _obstacle(at+Vector3(0,0.6,0),Vector3(0.7,1.2,0.72))
+    _block(boardroom_root,at+Vector3(0,0.46,0),Vector3(0.65,0.14,0.59),palette["chair"])
+    var cushion = _sphere(boardroom_root,at+Vector3(0,0.93,back_z),0.36,Color("#4a4540"))
+    cushion.scale = Vector3(0.94,1.48,0.25)
+    for x in [-0.25,0.25]:
+        for z in [-0.22,0.22]:
+            _block(boardroom_root,at+Vector3(x,0.22,z),Vector3(0.045,0.44,0.045),palette["metal"])
 
 func _character(parent: Node3D, at: Vector3, clothing: Color) -> Node3D:
-    var root := Node3D.new()
+    var root = Node3D.new()
     root.position = at
     parent.add_child(root)
-    _block(root, Vector3(0, 0.95, 0), Vector3(0.46, 0.8, 0.28), clothing)
-    _sphere(root, Vector3(0, 1.6, 0), 0.27, Color("#e6b38e"))
-    _block(root, Vector3(-0.13, 0.3, 0), Vector3(0.15, 0.58, 0.2), Color("#313947"))
-    _block(root, Vector3(0.13, 0.3, 0), Vector3(0.15, 0.58, 0.2), Color("#313947"))
-    _block(root, Vector3(-0.33, 1.05, 0), Vector3(0.14, 0.62, 0.19), clothing)
-    _block(root, Vector3(0.33, 1.05, 0), Vector3(0.14, 0.62, 0.19), clothing)
+    var torso = _sphere(root,Vector3(0,0.94,0),0.31,clothing)
+    torso.scale = Vector3(0.88,1.28,0.58)
+    var skin = Color("#c98e68")
+    var head = _sphere(root,Vector3(0,1.51,0),0.255,skin)
+    head.scale.y = 1.13
+    var hair = _sphere(root,Vector3(0,1.67,-0.045),0.245,Color("#49382f"))
+    hair.scale = Vector3(1.02,0.6,0.98)
+    for x in [-0.085,0.085]:
+        _sphere(root,Vector3(x,1.54,0.225),0.038,Color("#f9f4e8"))
+        _sphere(root,Vector3(x,1.54,0.254),0.018,Color("#28272b"))
+        _block(root,Vector3(x,1.61,0.22),Vector3(0.085,0.025,0.025),Color("#49382f"))
+    _sphere(root,Vector3(0,1.48,0.25),0.045,skin)
+    _block(root,Vector3(0,1.39,0.214),Vector3(0.095,0.022,0.022),Color("#74463a"))
+    for x in [-0.13,0.13]:
+        _block(root,Vector3(x,0.34,0),Vector3(0.17,0.58,0.23),Color("#313947"))
+        _block(root,Vector3(x,0.09,0.065),Vector3(0.19,0.15,0.32),Color("#322c29"))
+    for x in [-0.31,0.31]:
+        var arm = _sphere(root,Vector3(x,0.98,0),0.13,clothing)
+        arm.scale.y = 2.1
+        _sphere(root,Vector3(x,0.73,0),0.09,skin)
+    _block(root,Vector3(0,1.15,0.175),Vector3(0.12,0.23,0.035),Color("#e2dbd3"))
+    root.rotation.y = 0.65
     return root
 
 func _make_factory() -> void:
@@ -285,7 +377,7 @@ func _factory_beat() -> void:
             panel.visible = false
         )
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
     if phase != "explore":
         return
     var move := Vector3.ZERO
@@ -302,11 +394,15 @@ func _process(delta: float) -> void:
             auto_walk = false
             move = Vector3.ZERO
     if move.length() > 0:
-        var next := dave.position + move.normalized() * WALK_SPEED * delta
-        next.x = clampf(next.x, -4.55, 4.55)
-        next.z = clampf(next.z, -2.9, 3.1)
-        if not (absf(next.x) < 2.65 and next.z > -1.25 and next.z < 1.55):
-            dave.position = next
+        dave.velocity = move.normalized() * WALK_SPEED
+        dave.move_and_slide()
+        dave.position.x = clampf(dave.position.x, -4.55, 4.55)
+        dave.position.z = clampf(dave.position.z, -2.9, 3.1)
+        dave.get_child(1).rotation.y = atan2(move.x, move.z)
+        if auto_walk and dave.get_slide_collision_count() > 0:
+            auto_walk = false
+    else:
+        dave.velocity = Vector3.ZERO
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
