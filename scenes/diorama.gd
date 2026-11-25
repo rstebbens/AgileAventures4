@@ -427,6 +427,18 @@ func _make_ui() -> void:
     panel.add_theme_stylebox_override("panel", style)
     var stack := VBoxContainer.new()
     panel.add_child(stack)
+    var header := HBoxContainer.new()
+    stack.add_child(header)
+    var header_space := Control.new()
+    header_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    header.add_child(header_space)
+    var close_button := Button.new()
+    close_button.text = "×"
+    close_button.tooltip_text = "Close dialogue"
+    close_button.custom_minimum_size = Vector2(38, 32)
+    close_button.add_theme_font_size_override("font_size", 24)
+    close_button.pressed.connect(_dismiss_panel)
+    header.add_child(close_button)
     message = Label.new()
     message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     message.custom_minimum_size.y = 40
@@ -635,7 +647,13 @@ func _inspect_object(name: String) -> void:
     if name == "Dashboard" and factory_seen:
         var results := {"Speed":"Delivered quickly. Brakes omitted.", "Comfort":"Unrequested suspension. Costs and delays increase.", "Cost":"Basic brakes. Premium braking subscription."}
         message.text += "\nOutcome: " + results.get(choice, "")
-    _buttons(["Close [Esc]"], func(_unused): _close_inspection())
+    _buttons([], func(_unused): pass)
+
+func _dismiss_panel() -> void:
+    if phase == "factory":
+        factory_root.visible = false
+        boardroom_root.visible = true
+    _close_inspection()
 
 func _close_inspection() -> void:
     phase = "explore"
@@ -644,8 +662,8 @@ func _close_inspection() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
-        if event.keycode == KEY_ESCAPE and phase == "inspect":
-            _close_inspection()
+        if event.keycode == KEY_ESCAPE and panel.visible:
+            _dismiss_panel()
             return
         if phase == "explore" and (event.keycode == KEY_E or event.keycode == KEY_ENTER):
             if nearby != "":
