@@ -12,6 +12,7 @@ var martin: Node3D
 var camera: Camera3D
 var target := Vector3.ZERO
 var auto_walk := false
+@export var bake_environments := false
 var phase := "explore"
 var nearby := ""
 var prompt: Label3D
@@ -53,8 +54,17 @@ var palette := {
 
 func _ready() -> void:
     _setup_world()
-    _make_boardroom()
-    _make_factory()
+    if bake_environments:
+        _make_boardroom()
+        _make_factory()
+        _bake_rooms()
+        get_tree().quit()
+        return
+    if ResourceLoader.exists("res://scenes/BoardroomEditable.tscn") and ResourceLoader.exists("res://scenes/FactoryEditable.tscn"):
+        _load_rooms()
+    else:
+        _make_boardroom()
+        _make_factory()
     factory_root.visible = false
     _make_ui()
     _setup_interaction_hint()
@@ -167,9 +177,17 @@ func _make_boardroom() -> void:
         _block(boardroom_root,Vector3(-2.45+sin(angle)*0.19,2.65+cos(angle)*0.19,-3.48),Vector3(0.025,0.025,0.025),Color.WHITE)
     _block(boardroom_root,Vector3(-2.45,2.72,-3.46),Vector3(0.025,0.15,0.025),Color.WHITE)
     _block(boardroom_root,Vector3(-2.38,2.65,-3.46),Vector3(0.14,0.025,0.025),Color.WHITE)
+    _spawn_dave(Vector3(-3.3,0.06,1.35))
+    martin = _character(boardroom_root,Vector3(3.35,0.06,0.8),Color("#3d7564"))
+    objects["Martin"] = martin.position
+    objects["Dashboard"] = Vector3(2.55,0,-2.15)
+    _obstacle(martin.position+Vector3(0,0.85,0),Vector3(0.65,1.7,0.65))
+    martin.name = "Martin"
+
+func _spawn_dave(at: Vector3) -> void:
     dave = CharacterBody3D.new()
     boardroom_root.add_child(dave)
-    dave.position = Vector3(-3.3,0.06,1.35)
+    dave.position = at
     dave.motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
     var body_shape = CollisionShape3D.new()
     var capsule = CapsuleShape3D.new()
@@ -179,10 +197,6 @@ func _make_boardroom() -> void:
     body_shape.position.y = 0.85
     dave.add_child(body_shape)
     dave_art = _make_dave(dave)
-    martin = _character(boardroom_root,Vector3(3.35,0.06,0.8),Color("#3d7564"))
-    objects["Martin"] = martin.position
-    objects["Dashboard"] = Vector3(2.55,0,-2.15)
-    _obstacle(martin.position+Vector3(0,0.85,0),Vector3(0.65,1.7,0.65))
 
 func _obstacle(at: Vector3, size: Vector3) -> void:
     var body = StaticBody3D.new()
@@ -689,3 +703,55 @@ func _unhandled_input(event: InputEvent) -> void:
                 return
         target = point
         auto_walk = true
+
+# One-off scene conversion. Run BakeEnvironments.tscn from the editor.
+func _own_descendants(node: Node, scene_root: Node) -> void:
+    for child in node.get_children():
+        child.owner = scene_root
+        _own_descendants(child, scene_root)
+
+func _save_room(room: Node3D, path: String) -> void:
+    _own_descendants(room, room)
+    var packed := PackedScene.new()
+    var result := packed.pack(room)
+    if result == OK:
+        result = ResourceSaver.save(packed, path)
+    if result != OK:
+        push_error("Could not save " + path + ": " + str(result))
+    else:
+        print("Saved editable scene: " + path)
+
+func _bake_rooms() -> void:
+    var spawn := Marker3D.new()
+    spawn.name = "DaveSpawn"
+    spawn.position = dave.position
+    boardroom_root.add_child(spawn)
+    boardroom_root.remove_child(dave)
+    dave.queue_free()
+    var markers := Node3D.new()
+    markers.name = "InteractionPoints"
+    boardroom_root.add_child(markers)
+    for key in objects:
+        var marker := Marker3D.new()
+        marker.name = key
+        marker.position = objects[key]
+        markers.add_child(marker)
+        if interact_meshes.has(key):
+            var mesh: MeshInstance3D = interact_meshes[key]
+            mesh.name = key + "Highlight"
+    _save_room(boardroom_root, "res://scenes/BoardroomEditable.tscn")
+    _save_room(factory_root, "res://scenes/FactoryEditable.tscn")
+
+func _load_rooms() -> void:
+    boardroom_root = (load("res://scenes/BoardroomEditable.tscn") as PackedScene).instantiate() as Node3D
+    factory_root = (load("res://scenes/FactoryEditable.tscn") as PackedScene).instantiate() as Node3D
+    add_child(boardroom_root)
+    add_child(factory_root)
+    martin = boardroom_root.get_node("Martin") as Node3D
+    var markers := boardroom_root.get_node("InteractionPoints")
+    for marker in markers.get_children():
+        objects[String(marker.name)] = (marker as Node3D).position
+        var mesh := boardroom_root.find_child(String(marker.name) + "Highlight", true, false) as MeshInstance3D
+        if mesh != null:
+            interact_meshes[String(marker.name)] = mesh
+    _spawn_dave((boardroom_root.get_node("DaveSpawn") as Marker3D).position)
