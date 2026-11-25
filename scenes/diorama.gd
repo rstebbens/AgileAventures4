@@ -609,7 +609,7 @@ func _setup_interaction_hint() -> void:
 	ring.outer_radius = 0.43
 	highlight.mesh = ring
 	highlight_material = StandardMaterial3D.new()
-	highlight_material.albedo_color = Color("#ffd36b")
+	highlight_material.albedo_color = Color("#ffff21")
 	highlight_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	highlight.material_override = highlight_material
 	boardroom_root.add_child(highlight)
@@ -640,7 +640,7 @@ func _update_interaction_hint() -> void:
 		highlighted_mesh = interact_meshes[nearby]
 		var glow := StandardMaterial3D.new()
 		glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		glow.albedo_color = Color(1.0,0.78,0.25,0.22)
+		glow.albedo_color = Color(1.5,44.88,0.45,0.42)
 		glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		highlighted_mesh.material_overlay = glow
 
