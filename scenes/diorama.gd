@@ -12,7 +12,16 @@ var martin: Node3D
 var camera: Camera3D
 var target := Vector3.ZERO
 var auto_walk := false
-var phase := "intro"
+var phase := "explore"
+var nearby := ""
+var prompt: Label3D
+var highlight: MeshInstance3D
+var interact_meshes := {}
+var highlighted_mesh: MeshInstance3D
+var highlight_material: StandardMaterial3D
+@export var walk_speed := 1.5
+@export var walk_animation_speed := 2.5
+@export var idle_animation_speed := 1.5
 var choice := ""
 var factory_seen := false
 var dialogue_lines: Array[String] = []
@@ -48,7 +57,8 @@ func _ready() -> void:
     _make_factory()
     factory_root.visible = false
     _make_ui()
-    _say(["DAVE: Halvefords want 1,200 bicycles by Christmas.", "DAVE (to camera): Apparently we have a strategy. Nobody's seen it."], "explore")
+    _setup_interaction_hint()
+    panel.visible = false
 
 func _setup_world() -> void:
     var environment := WorldEnvironment.new()
@@ -134,17 +144,21 @@ func _make_boardroom() -> void:
     _block(boardroom_root,Vector3(2.55,0.4,-3.22),Vector3(2.25,0.8,0.85),palette["wood_dark"])
     _obstacle(Vector3(2.55,0.4,-3.22),Vector3(2.25,0.8,0.85))
     _block(boardroom_root,Vector3(2.55,2.05,-3.53),Vector3(2.2,1.35,0.14),Color("#20262c"))
-    _block(boardroom_root,Vector3(2.55,2.05,-3.44),Vector3(2.04,1.19,0.025),Color("#304957"))
+    interact_meshes["Dashboard"] = _block(boardroom_root,Vector3(2.55,2.05,-3.44),Vector3(2.04,1.19,0.025),Color("#304957"))
     for i in range(5):
         _block(boardroom_root,Vector3(1.85+i*0.32,1.65+i*0.07,-3.41),Vector3(0.18,0.24+i*0.14,0.025),Color("#8bb5ae"))
     _block(boardroom_root,Vector3(-3.7,0.5,2.6),Vector3(0.9,1.0,0.8),palette["wood_dark"])
     _obstacle(Vector3(-3.7,0.5,2.6),Vector3(0.9,1.0,0.8))
-    _block(boardroom_root,Vector3(-3.7,1.23,2.6),Vector3(0.55,0.46,0.48),Color("#333940"))
+    interact_meshes["Coffee"] = _block(boardroom_root,Vector3(-3.7,1.23,2.6),Vector3(0.55,0.46,0.48),Color("#333940"))
+    objects["Coffee"] = Vector3(-3.7,0,2.0)
     _block(boardroom_root,Vector3(-3.7,1.19,2.88),Vector3(0.32,0.19,0.09),Color("#92999b"))
     for x in [-1.25,1.15]:
         _block(boardroom_root,Vector3(x,0.97,0.1),Vector3(0.65,0.045,0.46),Color("#aeb5ba"))
         var screen = _block(boardroom_root,Vector3(x,1.21,-0.11),Vector3(0.65,0.45,0.045),Color("#b6bec3"))
         screen.rotation_degrees.x = -12
+        var key := "Research" if x < 0 else "Order"
+        interact_meshes[key] = screen
+        objects[key] = Vector3(x,0,1.05)
     _block(boardroom_root,Vector3(0,0.96,0.5),Vector3(0.45,0.025,0.32),palette["paper"])
     var clock = _sphere(boardroom_root,Vector3(-2.45,2.65,-3.53),0.25,Color("#51443a"))
     clock.scale.z = 0.14
@@ -322,7 +336,7 @@ func _pose_dave(state: String, _dt: float) -> void:
     if clip == &"":
         clip = _dave_clip("Idle")
     if clip != &"" and (dave_animation.current_animation != clip or not dave_animation.is_playing()):
-        dave_animation.play(clip, 0.18)
+        dave_animation.play(clip, 0.18, walk_animation_speed if wanted == "Walk" else idle_animation_speed)
 
 func _dialogue_emote() -> void:
     var words := message.text.to_lower()
@@ -386,7 +400,7 @@ func _make_ui() -> void:
     var layer := CanvasLayer.new()
     add_child(layer)
     title_label = Label.new()
-    title_label.text = "AGILE ADVENTURES 4  |  WASD / Arrows: move  |  E: interact  |  Tap: move or inspect"
+    title_label.text = "Objective: Understand the Halvefords opportunity"
     title_label.position = Vector2(18, 15)
     title_label.add_theme_color_override("font_color", Color("#252a31"))
     layer.add_child(title_label)
@@ -397,15 +411,25 @@ func _make_ui() -> void:
     panel = PanelContainer.new()
     hud.add_child(panel)
     panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-    panel.offset_left = 35
-    panel.offset_right = -35
-    panel.offset_top = -165
+    panel.anchor_left = 0.18
+    panel.anchor_right = 0.82
+    panel.offset_left = 0
+    panel.offset_right = 0
+    panel.offset_top = -135
     panel.offset_bottom = -20
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#26343f")
+    style.set_corner_radius_all(12)
+    style.content_margin_left = 18
+    style.content_margin_right = 18
+    style.content_margin_top = 12
+    style.content_margin_bottom = 12
+    panel.add_theme_stylebox_override("panel", style)
     var stack := VBoxContainer.new()
     panel.add_child(stack)
     message = Label.new()
     message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    message.custom_minimum_size.y = 68
+    message.custom_minimum_size.y = 40
     message.add_theme_font_size_override("font_size", 19)
     stack.add_child(message)
     actions = HBoxContainer.new()
@@ -506,6 +530,7 @@ func _factory_beat() -> void:
 
 func _physics_process(delta: float) -> void:
     if phase != "explore":
+        _update_interaction_hint()
         _pose_dave(emote,delta)
         return
     var move := Vector3.ZERO
@@ -523,7 +548,7 @@ func _physics_process(delta: float) -> void:
             move = Vector3.ZERO
     if move.length() > 0:
         var previous := dave.position
-        dave.velocity = move.normalized() * WALK_SPEED
+        dave.velocity = move.normalized() * walk_speed
         dave.move_and_slide()
         dave.position.x = clampf(dave.position.x, -4.55, 4.55)
         dave.position.z = clampf(dave.position.z, -2.9, 3.1)
@@ -539,19 +564,92 @@ func _physics_process(delta: float) -> void:
         dave.velocity = Vector3.ZERO
         idle_clock += delta
         _pose_dave("neutral",delta)
+    _update_interaction_hint()
+
+func _setup_interaction_hint() -> void:
+    prompt = Label3D.new()
+    prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+    prompt.font_size = 36
+    prompt.pixel_size = 0.006
+    prompt.outline_size = 10
+    prompt.modulate = Color("#ffe29a")
+    prompt.no_depth_test = true
+    boardroom_root.add_child(prompt)
+    highlight = MeshInstance3D.new()
+    var ring := TorusMesh.new()
+    ring.inner_radius = 0.36
+    ring.outer_radius = 0.43
+    highlight.mesh = ring
+    highlight_material = StandardMaterial3D.new()
+    highlight_material.albedo_color = Color("#ffd36b")
+    highlight_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    highlight.material_override = highlight_material
+    boardroom_root.add_child(highlight)
+    _update_interaction_hint()
+
+func _update_interaction_hint() -> void:
+    nearby = ""
+    var best := 1.85
+    if phase == "explore":
+        for key in objects:
+            var dist: float = dave.position.distance_to(objects[key])
+            if dist < best:
+                best = dist
+                nearby = key
+    if is_instance_valid(highlighted_mesh):
+        highlighted_mesh.material_overlay = null
+        highlighted_mesh = null
+    prompt.visible = nearby != ""
+    highlight.visible = nearby != ""
+    if nearby == "":
+        return
+    var labels := {"Dashboard":"View sales targets", "Research":"Examine research", "Order":"Review order", "Martin":"Talk to Martin", "Coffee":"Inspect coffee machine"}
+    prompt.text = "[E] " + labels[nearby]
+    var at: Vector3 = objects[nearby]
+    prompt.position = at + Vector3(0,2.25,0)
+    highlight.position = at + Vector3(0,0.09,0)
+    if interact_meshes.has(nearby):
+        highlighted_mesh = interact_meshes[nearby]
+        var glow := StandardMaterial3D.new()
+        glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+        glow.albedo_color = Color(1.0,0.78,0.25,0.22)
+        glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+        highlighted_mesh.material_overlay = glow
+
+func _inspect_object(name: String) -> void:
+    auto_walk = false
+    dave.velocity = Vector3.ZERO
+    if name == "Martin":
+        _interact(name)
+        return
+    phase = "inspect"
+    emote = "neutral"
+    panel.visible = true
+    var details := {
+        "Dashboard": "SALES TARGETS   |   Halvefords\n1,200 bicycles  •  Delivery: Christmas\nProduct strategy: Not defined",
+        "Research": "CUSTOMER RESEARCH\n12 children surveyed. Preferred gear count: 27.",
+        "Order": "HALVEFORDS ORDER\n1,200 bicycles. Christmas deadline.",
+        "Coffee": "DAVE: At least the coffee machine knows what it's here for."
+    }
+    message.text = details[name]
+    if name == "Dashboard" and factory_seen:
+        var results := {"Speed":"Delivered quickly. Brakes omitted.", "Comfort":"Unrequested suspension. Costs and delays increase.", "Cost":"Basic brakes. Premium braking subscription."}
+        message.text += "\nOutcome: " + results.get(choice, "")
+    _buttons(["Close [Esc]"], func(_unused): _close_inspection())
+
+func _close_inspection() -> void:
+    phase = "explore"
+    panel.visible = false
+    auto_walk = false
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
+        if event.keycode == KEY_ESCAPE and phase == "inspect":
+            _close_inspection()
+            return
         if phase == "explore" and (event.keycode == KEY_E or event.keycode == KEY_ENTER):
-            var nearest := ""
-            var best := 1.75
-            for key in objects:
-                var dist: float = dave.position.distance_to(objects[key])
-                if dist < best:
-                    best = dist
-                    nearest = key
-            if nearest != "":
-                _interact(nearest)
+            if nearby != "":
+                _inspect_object(nearby)
         elif phase == "dialogue" and event.keycode == KEY_SPACE:
             _advance()
     if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and phase == "explore":
@@ -563,13 +661,11 @@ func _unhandled_input(event: InputEvent) -> void:
         if distance <= 0:
             return
         var point := origin + direction * distance
-        var nearest := ""
-        for key in objects:
-            if point.distance_to(objects[key]) < 0.85:
-                nearest = key
-                break
-        if nearest != "":
-            _interact(nearest)
-        else:
-            target = point
-            auto_walk = true
+        if nearby != "":
+            var at: Vector3 = objects[nearby]
+            var screen_at := camera.unproject_position(at + Vector3(0,1.0,0))
+            if point.distance_to(at) < 0.85 or event.position.distance_to(screen_at) < 55:
+                _inspect_object(nearby)
+                return
+        target = point
+        auto_walk = true
