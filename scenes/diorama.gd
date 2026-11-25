@@ -415,8 +415,10 @@ func _make_ui() -> void:
     panel.anchor_right = 0.82
     panel.offset_left = 0
     panel.offset_right = 0
-    panel.offset_top = -135
+    panel.offset_top = -220
     panel.offset_bottom = -20
+    panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+    panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
     var style := StyleBoxFlat.new()
     style.bg_color = Color("#26343f")
     style.set_corner_radius_all(12)
