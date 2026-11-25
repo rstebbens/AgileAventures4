@@ -1,4 +1,6 @@
-[gd_scene load_steps=599 format=3 uid="uid://dietgrg8463a"]
+[gd_scene load_steps=600 format=3 uid="uid://dietgrg8463a"]
+
+[ext_resource type="Script" path="res://scenes/interaction_point.gd" id="1_interact"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8u664"]
 albedo_color = Color(0.329412, 0.282353, 0.243137, 1)
@@ -3466,6 +3468,10 @@ mesh = SubResource("BoxMesh_u2g01")
 
 [node name="Dashboard" type="Marker3D" parent="DashboardCabinet"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.07)
+script = ExtResource("1_interact")
+interaction_id = "Dashboard"
+prompt_text = "View sales targets"
+highlight_mesh = NodePath("../DashboardHighlight")
 metadata/_edit_group_ = true
 
 [node name="CoffeeStation" type="Node3D" parent="."]
@@ -3495,6 +3501,10 @@ mesh = SubResource("BoxMesh_2ii68")
 
 [node name="Coffee" type="Marker3D" parent="CoffeeStation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.6)
+script = ExtResource("1_interact")
+interaction_id = "Coffee"
+prompt_text = "Inspect coffee machine"
+highlight_mesh = NodePath("../CoffeeHighlight")
 [node name="ResearchLaptop" type="Node3D" parent="."]
 position = Vector3(-1.25, 0, 0.1)
 metadata/_edit_group_ = true
@@ -3511,6 +3521,10 @@ mesh = SubResource("BoxMesh_e2ymc")
 
 [node name="Research" type="Marker3D" parent="ResearchLaptop"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.95)
+script = ExtResource("1_interact")
+interaction_id = "Research"
+prompt_text = "Examine research"
+highlight_mesh = NodePath("../ResearchHighlight")
 
 [node name="OrderLaptop" type="Node3D" parent="."]
 position = Vector3(1.15, 0, 0.1)
@@ -3528,6 +3542,10 @@ mesh = SubResource("BoxMesh_c7cha")
 
 [node name="Order" type="Marker3D" parent="OrderLaptop"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.95)
+script = ExtResource("1_interact")
+interaction_id = "Order"
+prompt_text = "Review order"
+highlight_mesh = NodePath("../OrderHighlight")
 
 [node name="Clock" type="Node3D" parent="."]
 position = Vector3(-2.45, 2.65, -3.53)
