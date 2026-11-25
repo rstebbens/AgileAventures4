@@ -18,6 +18,7 @@ var nearby := ""
 var prompt: Label3D
 var highlight: MeshInstance3D
 var interact_meshes := {}
+var interaction_settings := {}
 var highlighted_mesh: MeshInstance3D
 var highlight_material: StandardMaterial3D
 @export var walk_speed := 1.5
@@ -617,11 +618,11 @@ func _setup_interaction_hint() -> void:
 
 func _update_interaction_hint() -> void:
 	nearby = ""
-	var best := 1.85
+	var best := INF
 	if phase == "explore":
 		for key in objects:
 			var dist: float = dave.position.distance_to(objects[key])
-			if dist < best:
+			if dist < best and dist < float(interaction_settings.get(key, {}).get("distance", 1.85)):
 				best = dist
 				nearby = key
 	if is_instance_valid(highlighted_mesh):
@@ -632,7 +633,7 @@ func _update_interaction_hint() -> void:
 	if nearby == "":
 		return
 	var labels := {"Dashboard":"View sales targets", "Research":"Examine research", "Order":"Review order", "Martin":"Talk to Martin", "Coffee":"Inspect coffee machine"}
-	prompt.text = "[E] " + labels[nearby]
+	prompt.text = "[E] " + str(interaction_settings.get(nearby, {}).get("prompt", labels.get(nearby, nearby)))
 	var at: Vector3 = objects[nearby]
 	prompt.position = at + Vector3(0,2.25,0)
 	highlight.position = at + Vector3(0,0.09,0)
@@ -640,7 +641,7 @@ func _update_interaction_hint() -> void:
 		highlighted_mesh = interact_meshes[nearby]
 		var glow := StandardMaterial3D.new()
 		glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		glow.albedo_color = Color(1.5,44.88,0.45,0.42)
+glow.albedo_color = interaction_settings.get(nearby, {}).get("color", Color(1.0,0.78,0.25,0.22))
 		glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		highlighted_mesh.material_overlay = glow
 
@@ -659,7 +660,7 @@ func _inspect_object(name: String) -> void:
 		"Order": "HALVEFORDS ORDER\n1,200 bicycles. Christmas deadline.",
 		"Coffee": "DAVE: At least the coffee machine knows what it's here for."
 	}
-	message.text = details[name]
+	message.text = str(interaction_settings.get(name, {}).get("text", details.get(name, "")))
 	if name == "Dashboard" and factory_seen:
 		var results := {"Speed":"Delivered quickly. Brakes omitted.", "Comfort":"Unrequested suspension. Costs and delays increase.", "Cost":"Basic brakes. Premium braking subscription."}
 		message.text += "\nOutcome: " + results.get(choice, "")
@@ -748,10 +749,26 @@ func _load_rooms() -> void:
 	add_child(boardroom_root)
 	add_child(factory_root)
 	martin = boardroom_root.get_node("Martin") as Node3D
-	var markers := boardroom_root.get_node("InteractionPoints")
-	for marker in markers.get_children():
-		objects[String(marker.name)] = (marker as Node3D).position
-		var mesh := boardroom_root.find_child(String(marker.name) + "Highlight", true, false) as MeshInstance3D
+	for marker in boardroom_root.find_children("*", "Marker3D", true, false):
+		var key := String(marker.name)
+		var custom := marker.get_script() == preload("res://scenes/interaction_point.gd")
+		if custom:
+			key = marker.interaction_id
+			if key.is_empty():
+				continue
+			interaction_settings[key] = {"distance": marker.activation_distance, "color": marker.highlight_color}
+			if not marker.prompt_text.is_empty():
+				interaction_settings[key]["prompt"] = marker.prompt_text
+			if not marker.inspection_text.is_empty():
+				interaction_settings[key]["text"] = marker.inspection_text
+		elif not objects.has(key):
+			continue
+		objects[key] = boardroom_root.to_local(marker.global_position)
+		var mesh: MeshInstance3D
+		if custom and not marker.highlight_mesh.is_empty():
+			mesh = marker.get_node_or_null(marker.highlight_mesh) as MeshInstance3D
+		else:
+			mesh = boardroom_root.find_child(key + "Highlight", true, false) as MeshInstance3D
 		if mesh != null:
-			interact_meshes[String(marker.name)] = mesh
+			interact_meshes[key] = mesh
 	_spawn_dave((boardroom_root.get_node("DaveSpawn") as Marker3D).position)
