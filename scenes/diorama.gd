@@ -751,7 +751,7 @@ func _load_rooms() -> void:
 	martin = boardroom_root.get_node("Martin") as Node3D
 	for marker in boardroom_root.find_children("*", "Marker3D", true, false):
 		var key := String(marker.name)
-		var custom := marker.get_script() == preload("res://scenes/interaction_point.gd")
+		var custom: bool = marker.get_script() == preload("res://scenes/interaction_point.gd")
 		if custom:
 			key = marker.interaction_id
 			if key.is_empty():
