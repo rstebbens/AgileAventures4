@@ -641,7 +641,7 @@ func _update_interaction_hint() -> void:
 		highlighted_mesh = interact_meshes[nearby]
 		var glow := StandardMaterial3D.new()
 		glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-glow.albedo_color = interaction_settings.get(nearby, {}).get("color", Color(1.0,0.78,0.25,0.22))
+		glow.albedo_color = interaction_settings.get(nearby, {}).get("color", Color(1.0,0.78,0.25,0.22))
 		glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		highlighted_mesh.material_overlay = glow
 
