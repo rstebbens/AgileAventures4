@@ -1,4 +1,4 @@
-[gd_scene load_steps=600 format=3 uid="uid://dietgrg8463a"]
+[gd_scene load_steps=601 format=3 uid="uid://dietgrg8463a"]
 
 [ext_resource type="Script" path="res://scenes/interaction_point.gd" id="1_interact"]
 
@@ -2096,6 +2096,10 @@ size = Vector3(0.12, 0.23, 0.035)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wit05"]
 size = Vector3(0.65, 1.7, 0.65)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ly3cl"]
+albedo_color = Color(0.188235, 0.286275, 0.341176, 1)
+roughness = 0.85
 
 [node name="Boardroom" type="Node3D"]
 
