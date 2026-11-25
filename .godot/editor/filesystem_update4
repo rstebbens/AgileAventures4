@@ -1,4 +1,2 @@
-res://scenes/BakeEnvironments.tscn
+res://scenes/boardroom.tscn
 res://scenes/BoardroomEditable.tscn
-res://scenes/diorama.gd
-res://scenes/FactoryEditable.tscn

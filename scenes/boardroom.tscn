@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://cc4eqwcda304b"]
 
-[ext_resource type="Script" path="res://scenes/boardroom.gd" id="1"]
+[ext_resource type="Script" uid="uid://dx3icxy3d8pkb" path="res://scenes/boardroom.gd" id="1"]
 
 [node name="Boardroom" type="Node2D"]
 script = ExtResource("1")

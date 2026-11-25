@@ -1,6 +1,6 @@
-[gd_scene load_steps=601 format=3 uid="uid://dietgrg8463a"]
+[gd_scene load_steps=602 format=3 uid="uid://dietgrg8463a"]
 
-[ext_resource type="Script" path="res://scenes/interaction_point.gd" id="1_interact"]
+[ext_resource type="Script" uid="uid://djcx0as5iyq5i" path="res://scenes/interaction_point.gd" id="1_interact"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8u664"]
 albedo_color = Color(0.329412, 0.282353, 0.243137, 1)
@@ -1746,13 +1746,14 @@ roughness = 0.85
 [sub_resource type="BoxMesh" id="BoxMesh_l1ohd"]
 size = Vector3(2.2, 1.35, 0.14)
 
-[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_8u664"]
-transparency = 1
-blend_mode = 1
-albedo_color = Color(1, 1, 0.129412, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ly3cl"]
+albedo_color = Color(0.0848023, 0.148107, 0.00391283, 1)
+roughness = 0.85
 
 [sub_resource type="BoxMesh" id="BoxMesh_303pa"]
 size = Vector3(2.04, 1.19, 0.025)
+
+[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_ca371"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ai34p"]
 albedo_color = Color(0.545098, 0.709804, 0.682353, 1)
@@ -1842,13 +1843,6 @@ roughness = 0.85
 
 [sub_resource type="BoxMesh" id="BoxMesh_c7cha"]
 size = Vector3(0.65, 0.45, 0.045)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dl45g"]
-albedo_color = Color(0.968627, 0.929412, 0.858824, 1)
-roughness = 0.85
-
-[sub_resource type="BoxMesh" id="BoxMesh_xm1r5"]
-size = Vector3(0.45, 0.025, 0.32)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jqnl5"]
 albedo_color = Color(0.317647, 0.266667, 0.227451, 1)
@@ -1941,6 +1935,13 @@ roughness = 0.85
 
 [sub_resource type="BoxMesh" id="BoxMesh_rcppr"]
 size = Vector3(0.14, 0.025, 0.025)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dl45g"]
+albedo_color = Color(0.968627, 0.929412, 0.858824, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_xm1r5"]
+size = Vector3(0.45, 0.025, 0.32)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0qli5"]
 albedo_color = Color(0.239216, 0.458824, 0.392157, 1)
@@ -2097,14 +2098,9 @@ size = Vector3(0.12, 0.23, 0.035)
 [sub_resource type="BoxShape3D" id="BoxShape3D_wit05"]
 size = Vector3(0.65, 1.7, 0.65)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ly3cl"]
-albedo_color = Color(0.188235, 0.286275, 0.341176, 1)
-roughness = 0.85
-
 [node name="Boardroom" type="Node3D"]
 
 [node name="Floor" type="Node3D" parent="."]
-position = Vector3(0, 0, 0)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@5" type="MeshInstance3D" parent="Floor"]
@@ -2463,7 +2459,7 @@ material_override = SubResource("StandardMaterial3D_1ynpn")
 mesh = SubResource("BoxMesh_x3gif")
 
 [node name="BackWall" type="Node3D" parent="."]
-position = Vector3(0, 0, -3.72)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3.72)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@76" type="MeshInstance3D" parent="BackWall"]
@@ -2492,7 +2488,7 @@ material_override = SubResource("StandardMaterial3D_cxc2f")
 mesh = SubResource("BoxMesh_kb0co")
 
 [node name="Window1" type="Node3D" parent="."]
-position = Vector3(-3.65, 0, -3.72)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.65, 0, -3.72)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@81" type="MeshInstance3D" parent="Window1"]
@@ -2611,7 +2607,7 @@ material_override = SubResource("StandardMaterial3D_gkblm")
 mesh = SubResource("BoxMesh_64aua")
 
 [node name="Window2" type="Node3D" parent="."]
-position = Vector3(-1.65, 0, -3.72)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 0, -3.72)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@104" type="MeshInstance3D" parent="Window2"]
@@ -2730,7 +2726,7 @@ material_override = SubResource("StandardMaterial3D_4hray")
 mesh = SubResource("BoxMesh_v430n")
 
 [node name="SideWall" type="Node3D" parent="."]
-position = Vector3(-5.23, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.23, 0, 0)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@127" type="MeshInstance3D" parent="SideWall"]
@@ -2864,7 +2860,7 @@ material_override = SubResource("StandardMaterial3D_i7kv5")
 mesh = SubResource("BoxMesh_4shn7")
 
 [node name="MeetingTable" type="Node3D" parent="."]
-position = Vector3(0, 0, 0.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.3)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@153" type="MeshInstance3D" parent="MeetingTable"]
@@ -2904,7 +2900,7 @@ material_override = SubResource("StandardMaterial3D_j836n")
 mesh = SubResource("BoxMesh_spqqk")
 
 [node name="Chair1" type="Node3D" parent="."]
-position = Vector3(-1.5, 0, -1.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -1.25)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@161" type="StaticBody3D" parent="Chair1"]
@@ -2944,7 +2940,7 @@ material_override = SubResource("StandardMaterial3D_nnuof")
 mesh = SubResource("BoxMesh_eeb6h")
 
 [node name="Chair2" type="Node3D" parent="."]
-position = Vector3(-1.5, 0, 1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 1.85)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@169" type="StaticBody3D" parent="Chair2"]
@@ -2984,7 +2980,7 @@ material_override = SubResource("StandardMaterial3D_et3tg")
 mesh = SubResource("BoxMesh_c1oc8")
 
 [node name="Chair3" type="Node3D" parent="."]
-position = Vector3(0, 0, -1.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.25)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@177" type="StaticBody3D" parent="Chair3"]
@@ -3024,7 +3020,7 @@ material_override = SubResource("StandardMaterial3D_q67kt")
 mesh = SubResource("BoxMesh_j8f3x")
 
 [node name="Chair4" type="Node3D" parent="."]
-position = Vector3(0, 0, 1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.85)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@185" type="StaticBody3D" parent="Chair4"]
@@ -3064,7 +3060,7 @@ material_override = SubResource("StandardMaterial3D_ltrpx")
 mesh = SubResource("BoxMesh_1nkfv")
 
 [node name="Chair5" type="Node3D" parent="."]
-position = Vector3(1.5, 0, -1.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, -1.25)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@193" type="StaticBody3D" parent="Chair5"]
@@ -3104,7 +3100,7 @@ material_override = SubResource("StandardMaterial3D_hqub6")
 mesh = SubResource("BoxMesh_makhf")
 
 [node name="Chair6" type="Node3D" parent="."]
-position = Vector3(1.5, 0, 1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 1.85)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@201" type="StaticBody3D" parent="Chair6"]
@@ -3144,7 +3140,7 @@ material_override = SubResource("StandardMaterial3D_7lv65")
 mesh = SubResource("BoxMesh_qbhhw")
 
 [node name="Bookcase1" type="Node3D" parent="."]
-position = Vector3(0.8, 0, -3.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, -3.2)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@209" type="StaticBody3D" parent="Bookcase1"]
@@ -3284,7 +3280,7 @@ material_override = SubResource("StandardMaterial3D_7kxdx")
 mesh = SubResource("BoxMesh_r44vo")
 
 [node name="Bookcase2" type="Node3D" parent="."]
-position = Vector3(4.35, 0, -3.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.35, 0, -3.2)
 metadata/_edit_group_ = true
 
 [node name="@StaticBody3D@237" type="StaticBody3D" parent="Bookcase2"]
@@ -3424,7 +3420,7 @@ material_override = SubResource("StandardMaterial3D_wchvi")
 mesh = SubResource("BoxMesh_lx3ok")
 
 [node name="DashboardCabinet" type="Node3D" parent="."]
-position = Vector3(2.55, 0, -3.22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.55, 0, -3.22)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@265" type="MeshInstance3D" parent="DashboardCabinet"]
@@ -3447,6 +3443,7 @@ mesh = SubResource("BoxMesh_l1ohd")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.05, -0.22)
 material_override = SubResource("StandardMaterial3D_ly3cl")
 mesh = SubResource("BoxMesh_303pa")
+surface_material_override/0 = SubResource("ORMMaterial3D_ca371")
 
 [node name="@MeshInstance3D@270" type="MeshInstance3D" parent="DashboardCabinet"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.65, -0.19)
@@ -3482,7 +3479,7 @@ highlight_mesh = NodePath("../DashboardHighlight")
 metadata/_edit_group_ = true
 
 [node name="CoffeeStation" type="Node3D" parent="."]
-position = Vector3(-3.7, 0, 2.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0, 2.6)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@275" type="MeshInstance3D" parent="CoffeeStation"]
@@ -3512,8 +3509,9 @@ script = ExtResource("1_interact")
 interaction_id = "Coffee"
 prompt_text = "Inspect coffee machine"
 highlight_mesh = NodePath("../CoffeeHighlight")
+
 [node name="ResearchLaptop" type="Node3D" parent="."]
-position = Vector3(-1.25, 0, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.25, 0, 0.1)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@280" type="MeshInstance3D" parent="ResearchLaptop"]
@@ -3535,7 +3533,7 @@ prompt_text = "Examine research"
 highlight_mesh = NodePath("../ResearchHighlight")
 
 [node name="OrderLaptop" type="Node3D" parent="."]
-position = Vector3(1.15, 0, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.15, 0, 0.1)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@282" type="MeshInstance3D" parent="OrderLaptop"]
@@ -3556,7 +3554,7 @@ prompt_text = "Review order"
 highlight_mesh = NodePath("../OrderHighlight")
 
 [node name="Clock" type="Node3D" parent="."]
-position = Vector3(-2.45, 2.65, -3.53)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.45, 2.65, -3.53)
 metadata/_edit_group_ = true
 
 [node name="@MeshInstance3D@285" type="MeshInstance3D" parent="Clock"]
@@ -3755,4 +3753,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3, 0.06, 1.35)
 
 [node name="Martin" type="Marker3D" parent="InteractionPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 0.06, 0.8)
-

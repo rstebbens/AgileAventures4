@@ -1,0 +1,40 @@
+[gd_scene load_steps=7 format=3 uid="uid://hu0j4phiu8nm"]
+
+[ext_resource type="Script" uid="uid://ijhx0uvwuawj" path="res://scenes/interaction_point.gd" id="1_wstrm"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e22vm"]
+albedo_color = Color(0.682353, 0.709804, 0.729412, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_0mrt0"]
+size = Vector3(0.65, 0.045, 0.46)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a5g7s"]
+albedo_color = Color(0.713726, 0.745098, 0.764706, 1)
+roughness = 0.85
+
+[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_2d0kg"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_e2ymc"]
+size = Vector3(0.65, 0.45, 0.045)
+
+[node name="ResearchLaptop" type="Node3D"]
+metadata/_edit_group_ = true
+
+[node name="_MeshInstance3D_280" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.97, 0)
+material_override = SubResource("StandardMaterial3D_e22vm")
+mesh = SubResource("BoxMesh_0mrt0")
+
+[node name="ResearchHighlight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.978148, 0.207912, 0, -0.207912, 0.978148, 0, 1.21, -0.21)
+material_override = SubResource("StandardMaterial3D_a5g7s")
+material_overlay = SubResource("ORMMaterial3D_2d0kg")
+mesh = SubResource("BoxMesh_e2ymc")
+
+[node name="Research" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.95)
+script = ExtResource("1_wstrm")
+interaction_id = "Research"
+prompt_text = "Examine research"
+highlight_mesh = NodePath("../ResearchHighlight")

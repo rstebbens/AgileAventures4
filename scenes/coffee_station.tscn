@@ -1,0 +1,58 @@
+[gd_scene load_steps=9 format=3 uid="uid://v2oqy71koiyu"]
+
+[ext_resource type="Script" uid="uid://ijhx0uvwuawj" path="res://scenes/interaction_point.gd" id="1_7m3yq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pc5ja"]
+albedo_color = Color(0.356863, 0.266667, 0.211765, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_f6ng8"]
+size = Vector3(0.9, 1, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_52ruc"]
+size = Vector3(0.9, 1, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w16jp"]
+albedo_color = Color(0.2, 0.223529, 0.25098, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_iam0a"]
+size = Vector3(0.55, 0.46, 0.48)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_evg4g"]
+albedo_color = Color(0.572549, 0.6, 0.607843, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_2ii68"]
+size = Vector3(0.32, 0.19, 0.09)
+
+[node name="CoffeeStation" type="Node3D"]
+metadata/_edit_group_ = true
+
+[node name="_MeshInstance3D_275" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+material_override = SubResource("StandardMaterial3D_pc5ja")
+mesh = SubResource("BoxMesh_f6ng8")
+
+[node name="_StaticBody3D_276" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="_CollisionShape3D_277" type="CollisionShape3D" parent="_StaticBody3D_276"]
+shape = SubResource("BoxShape3D_52ruc")
+
+[node name="CoffeeHighlight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.23, 0)
+material_override = SubResource("StandardMaterial3D_w16jp")
+mesh = SubResource("BoxMesh_iam0a")
+
+[node name="_MeshInstance3D_279" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.19, 0.28)
+material_override = SubResource("StandardMaterial3D_evg4g")
+mesh = SubResource("BoxMesh_2ii68")
+
+[node name="Coffee" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.6)
+script = ExtResource("1_7m3yq")
+interaction_id = "Coffee"
+prompt_text = "Inspect coffee machine"
+highlight_mesh = NodePath("../CoffeeHighlight")
