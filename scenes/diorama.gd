@@ -258,135 +258,71 @@ func _soft_limb(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Co
     var right := axis.cross(helper).normalized()
     piece.basis = Basis(right,axis,right.cross(axis).normalized())
 
+# Imported character, fitted to the existing room in world units.
+var dave_animation: AnimationPlayer
+var dave_wave_active := false
+const DAVE_HEIGHT := 1.8
+@export var dave_facing_offset_degrees := 180.0
+
 func _make_dave(parent: Node3D) -> Node3D:
-    var ink := Color("#30282a")
-    var skin := Color("#eeb17c")
-    var hair_color := Color("#563124")
-    var root := _joint(parent,"DaveArt",Vector3.ZERO)
-    var upper := _joint(root,"Upper",Vector3.ZERO)
-    # Rounded, continuous purple tunic, not a flat outlined rectangle.
-    var shirt := _oval(upper,Vector3(0,0.91,0),Vector3(0.54,0.64,0.37),Color("#80368e"))
-    var neck := _oval(upper,Vector3(0,1.2,0),Vector3(0.19,0.15,0.19),skin)
-    var head := _joint(upper,"Head",Vector3(0,1.55,0))
-    _oval(head,Vector3.ZERO,Vector3(0.77,0.75,0.70),skin)
-    # Hair is a sculpted crown/back cap, with exposed skin on either side.
-    _oval(head,Vector3(0,0.11,-0.13),Vector3(0.77,0.62,0.54),hair_color)
-    for k in range(9):
-        var angle := float(k)*TAU/9.0
-        var lock := _oval(head,Vector3(sin(angle)*0.26,0.29+0.035*sin(angle*3),cos(angle)*0.22-0.04),Vector3(0.21,0.26,0.20),hair_color)
-        lock.rotation.z = -sin(angle)*0.65
-        lock.rotation.x = cos(angle)*0.55
-    _oval(head,Vector3(-0.10,0.39,-0.015),Vector3(0.19,0.23,0.19),hair_color).rotation.z = 0.35
-    _oval(head,Vector3(0.075,0.38,-0.075),Vector3(0.22,0.25,0.21),hair_color).rotation.z = -0.42
-    for side in [-1,1]:
-        _oval(head,Vector3(side*0.36,-0.025,-0.015),Vector3(0.105,0.15,0.105),skin)
-        var eye := _oval(head,Vector3(side*0.12,0.015,0.331),Vector3(0.082,0.125,0.045),ink)
-        var brow := _joint(head,"BrowL" if side == -1 else "BrowR",Vector3(side*0.13,0.15,0.31))
-        _soft_limb(brow,Vector3(-0.045,-0.008,-0.005),Vector3(0.0,0.012,0.012),0.018,hair_color)
-        _soft_limb(brow,Vector3(0.0,0.012,0.012),Vector3(0.045,-0.008,-0.005),0.018,hair_color)
-    for mood in ["neutral","happy","sad","open"]:
-        var mouth := _joint(head,"Mouth_"+mood,Vector3(0,-0.13,0.325))
-        if mood == "open":
-            _oval(mouth,Vector3.ZERO,Vector3(0.23,0.12,0.043),ink)
-            _oval(mouth,Vector3(0,-0.035,0.019),Vector3(0.10,0.036,0.021),Color("#d77e79"))
-        else:
-            var depth := -0.04 if mood == "sad" else 0.05
-            for k in range(8):
-                var t := -1.0+k*0.25
-                var u := t+0.25
-                _ink(mouth,Vector3(t*0.105,depth*t*t-depth,-0.025*t*t),Vector3(u*0.105,depth*u*u-depth,-0.025*u*u),0.012,ink)
-        mouth.visible = mood == "neutral"
-    for side in [-1,1]:
-        var leg := _joint(root,"LegL" if side == -1 else "LegR",Vector3(side*0.135,0.66,0))
-        _soft_limb(leg,Vector3.ZERO,Vector3(0,-0.29,0),0.073,ink)
-        var knee := _joint(leg,"Knee",Vector3(0,-0.29,0))
-        _soft_limb(knee,Vector3.ZERO,Vector3(0,-0.25,0),0.063,ink)
-        _oval(knee,Vector3(0,-0.29,0.065),Vector3(0.18,0.14,0.30),ink)
-        var arm := _joint(upper,"ArmL" if side == -1 else "ArmR",Vector3(side*0.23,1.13,0))
-        _soft_limb(arm,Vector3.ZERO,Vector3(side*0.075,-0.22,0),0.067,ink)
-        var elbow := _joint(arm,"Elbow",Vector3(side*0.075,-0.22,0))
-        _soft_limb(elbow,Vector3.ZERO,Vector3(0,-0.20,0),0.058,ink)
-        _oval(elbow,Vector3(0,-0.245,0),Vector3(0.15,0.17,0.13),skin)
-        _oval(elbow,Vector3(-side*0.065,-0.22,0.025),Vector3(0.075,0.10,0.08),skin)
+    var root := Node3D.new()
+    root.name = "DaveArt"
+    parent.add_child(root)
+    var model := preload("res://Models/DaveRigged.glb").instantiate() as Node3D
+    root.add_child(model)
+    var bounds := AABB()
+    var found := false
+    for child in model.find_children("*", "MeshInstance3D", true, false):
+        var mesh_node := child as MeshInstance3D
+        var local_bounds: AABB = (root.global_transform.affine_inverse() * mesh_node.global_transform) * mesh_node.get_aabb()
+        bounds = bounds.merge(local_bounds) if found else local_bounds
+        found = true
+    if found and bounds.size.y > 0.001:
+        var factor := DAVE_HEIGHT / bounds.size.y
+        model.scale *= factor
+        model.position -= Vector3(bounds.get_center().x, bounds.position.y, bounds.get_center().z) * factor
+    model.rotation.y += deg_to_rad(dave_facing_offset_degrees)
+    dave_animation = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+    if dave_animation != null:
+        for clip in dave_animation.get_animation_list():
+            var animation := dave_animation.get_animation(clip)
+            var short_name := String(clip).get_file().to_lower()
+            if short_name == "idle" or short_name == "walk":
+                animation.loop_mode = Animation.LOOP_LINEAR
+            elif short_name == "wave":
+                animation.loop_mode = Animation.LOOP_NONE
+    else:
+        push_warning("DaveRigged has no AnimationPlayer.")
     root.rotation.y = 0.78
     return root
 
-func _pose_dave(state: String, dt: float) -> void:
-    if not is_instance_valid(dave_art):
+func _dave_clip(wanted: String) -> StringName:
+    if dave_animation != null:
+        for clip in dave_animation.get_animation_list():
+            if String(clip).get_file().to_lower() == wanted.to_lower():
+                return clip
+    return &""
+
+func _pose_dave(state: String, _dt: float) -> void:
+    if not is_instance_valid(dave_animation):
         return
-    var upper := dave_art.get_node("Upper") as Node3D
-    var head := upper.get_node("Head") as Node3D
-    var left := upper.get_node("ArmL") as Node3D
-    var right := upper.get_node("ArmR") as Node3D
-    var ll := dave_art.get_node("LegL") as Node3D
-    var rl := dave_art.get_node("LegR") as Node3D
-    var re := right.get_node("Elbow") as Node3D
-    var le := left.get_node("Elbow") as Node3D
-    var swing := 0.0
-    var mouth := "neutral"
-    var l := Vector3(0,0,-0.12)
-    var r := Vector3(0,0,0.12)
-    var elbow := Vector3.ZERO
-    var tilt := 0.0
-    var brows := 0.0
+    var wanted := "Idle"
     if state == "walk":
-        walk_clock += dt*10.0
-        swing = sin(walk_clock)*0.53
+        wanted = "Walk"
     elif state == "welcome":
-        mouth = "open"
-        r.z = 2.1+sin(idle_clock*8)*0.22
-        elbow.z = 0.35
-    elif state == "thinking":
-        mouth = "sad"
-        r.x = -0.85
-        r.z = -0.16
-        elbow.x = -1.45
-        tilt = 0.12
-        brows = 0.23
-    elif state == "idea" or state == "thumbs":
-        mouth = "open"
-        r.z = 1.9
-        elbow.z = 0.45
-    elif state == "confused":
-        mouth = "sad"
-        r.z = 2.2
-        elbow.z = -0.85
-        tilt = -0.15
-        brows = 0.28
-    elif state == "sad":
-        mouth = "sad"
-        tilt = 0.08
-        brows = 0.35
-    elif state == "frustrated":
-        mouth = "sad"
-        brows = -0.45
-        r.x = -0.55
-        l.x = -0.55
-        r.z = -0.45
-        l.z = 0.45
-        elbow.x = -0.8
-    l.x += swing
-    r.x -= swing
-    var blend := minf(dt*13.0,1.0)
-    left.rotation = left.rotation.lerp(l,blend)
-    right.rotation = right.rotation.lerp(r,blend)
-    re.rotation = re.rotation.lerp(elbow,blend)
-    le.rotation = le.rotation.lerp(Vector3(-0.8,0,0) if state == "frustrated" else Vector3.ZERO,blend)
-    ll.rotation.x = lerpf(ll.rotation.x,-swing,blend)
-    rl.rotation.x = lerpf(rl.rotation.x,swing,blend)
-    var lk := ll.get_node("Knee") as Node3D
-    var rk := rl.get_node("Knee") as Node3D
-    lk.rotation.x = lerpf(lk.rotation.x,maxf(0.0,swing)*0.85,blend)
-    rk.rotation.x = lerpf(rk.rotation.x,maxf(0.0,-swing)*0.85,blend)
-    if state == "walk":
-        re.rotation.x = lerpf(re.rotation.x,-0.18-maxf(swing,0.0)*0.22,blend)
-        le.rotation.x = lerpf(le.rotation.x,-0.18-maxf(-swing,0.0)*0.22,blend)
-    upper.position.y = lerpf(upper.position.y,absf(swing)*0.055,blend)
-    head.rotation.z = lerpf(head.rotation.z,tilt,blend)
-    (head.get_node("BrowL") as Node3D).rotation.z = lerpf((head.get_node("BrowL") as Node3D).rotation.z,brows,blend)
-    (head.get_node("BrowR") as Node3D).rotation.z = lerpf((head.get_node("BrowR") as Node3D).rotation.z,-brows,blend)
-    for mood in ["neutral","happy","sad","open"]:
-        (head.get_node("Mouth_"+mood) as Node3D).visible = mood == mouth
+        wanted = "Wave"
+        if dave_wave_active:
+            if dave_animation.is_playing() and dave_animation.current_animation == _dave_clip("Wave"):
+                return
+            wanted = "Idle"
+        dave_wave_active = true
+    if state != "welcome":
+        dave_wave_active = false
+    var clip := _dave_clip(wanted)
+    if clip == &"":
+        clip = _dave_clip("Idle")
+    if clip != &"" and (dave_animation.current_animation != clip or not dave_animation.is_playing()):
+        dave_animation.play(clip, 0.18)
 
 func _dialogue_emote() -> void:
     var words := message.text.to_lower()
@@ -602,13 +538,7 @@ func _physics_process(delta: float) -> void:
     else:
         dave.velocity = Vector3.ZERO
         idle_clock += delta
-        var cycle := fmod(idle_clock,12.0)
-        var state := "neutral"
-        if cycle > 3.0 and cycle < 5.5: state = "welcome"
-        elif cycle > 7.0 and cycle < 10.0: state = "thinking"
-        if state != "neutral":
-            dave_art.rotation.y = lerp_angle(dave_art.rotation.y,0.78,minf(delta*5,1.0))
-        _pose_dave(state,delta)
+        _pose_dave("neutral",delta)
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
