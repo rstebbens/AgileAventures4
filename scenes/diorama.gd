@@ -748,10 +748,12 @@ func _load_rooms() -> void:
 	add_child(boardroom_root)
 	add_child(factory_root)
 	martin = boardroom_root.get_node("Martin") as Node3D
-	var markers := boardroom_root.get_node("InteractionPoints")
-	for marker in markers.get_children():
-		objects[String(marker.name)] = (marker as Node3D).position
-		var mesh := boardroom_root.find_child(String(marker.name) + "Highlight", true, false) as MeshInstance3D
+	for marker in boardroom_root.find_children("*", "Marker3D", true, false):
+		var key := String(marker.name)
+		if not objects.has(key):
+			continue
+		objects[key] = boardroom_root.to_local(marker.global_position)
+		var mesh := boardroom_root.find_child(key + "Highlight", true, false) as MeshInstance3D
 		if mesh != null:
-			interact_meshes[String(marker.name)] = mesh
+			interact_meshes[key] = mesh
 	_spawn_dave((boardroom_root.get_node("DaveSpawn") as Marker3D).position)
