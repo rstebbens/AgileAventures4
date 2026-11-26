@@ -1,0 +1,146 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scenes/strategy_board.gd" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="Paper"]
+albedo_color = Color(1, 0.96, 0.87, 1)
+
+[sub_resource type="StandardMaterial3D" id="Frame"]
+albedo_color = Color(0.33, 0.32, 0.36, 1)
+
+[sub_resource type="StandardMaterial3D" id="Ink"]
+albedo_color = Color(0.32, 0.25, 0.37, 1)
+
+[sub_resource type="StandardMaterial3D" id="Purple"]
+albedo_color = Color(0.47, 0.31, 0.64, 1)
+
+[sub_resource type="BoxMesh" id="Box"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="SphereMesh" id="Sphere"]
+radius = 0.5
+height = 1.0
+
+[node name="StrategyBoard" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Paper" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.55, 0)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1.25, 1.45, 0.08)
+mesh = SubResource("Box")
+material_override = SubResource("Paper")
+
+[node name="LeftLeg" type="MeshInstance3D" parent="."]
+position = Vector3(-0.48, 0.46, 0)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.07, 0.92, 0.12)
+mesh = SubResource("Box")
+material_override = SubResource("Frame")
+
+[node name="RightLeg" type="MeshInstance3D" parent="."]
+position = Vector3(0.48, 0.46, 0)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.07, 0.92, 0.12)
+mesh = SubResource("Box")
+material_override = SubResource("Frame")
+
+[node name="RearFoot" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.15, -0.23)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.08, 0.3, 0.5)
+mesh = SubResource("Box")
+material_override = SubResource("Frame")
+
+[node name="TriangleLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-0.215, 1.7, 0.06)
+rotation = Vector3(0, 0, 0.9489720389643068)
+scale = Vector3(0.7381734213584231, 0.018, 0.018)
+mesh = SubResource("Box")
+material_override = SubResource("Ink")
+
+[node name="TriangleRight" type="MeshInstance3D" parent="."]
+position = Vector3(0.215, 1.7, 0.06)
+rotation = Vector3(0, 0, -0.9489720389643068)
+scale = Vector3(0.7381734213584231, 0.018, 0.018)
+mesh = SubResource("Box")
+material_override = SubResource("Ink")
+
+[node name="TriangleBase" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.4, 0.06)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.86, 0.018, 0.018)
+mesh = SubResource("Box")
+material_override = SubResource("Ink")
+
+[node name="AutonomyScale" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.05, 0.06)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.92, 0.018, 0.018)
+mesh = SubResource("Box")
+material_override = SubResource("Ink")
+
+[node name="StrategyMarker" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.46, 0.1)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.11, 0.11, 0.11)
+mesh = SubResource("Sphere")
+material_override = SubResource("Purple")
+
+[node name="AutonomyMarker" type="MeshInstance3D" parent="."]
+position = Vector3(-0.23, 1.05, 0.1)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.09, 0.09, 0.09)
+mesh = SubResource("Sphere")
+material_override = SubResource("Purple")
+
+[node name="Heading" type="Label3D" parent="."]
+position = Vector3(0, 2.19, 0.065)
+text = "OUR STRATEGY"
+font_size = 28
+pixel_size = 0.003
+outline_size = 0
+modulate = Color(0.32, 0.25, 0.37, 1)
+
+[node name="Quality" type="Label3D" parent="."]
+position = Vector3(0, 2.08, 0.065)
+text = "Quality"
+font_size = 20
+pixel_size = 0.003
+outline_size = 0
+modulate = Color(0.32, 0.25, 0.37, 1)
+
+[node name="Cost" type="Label3D" parent="."]
+position = Vector3(-0.43, 1.32, 0.065)
+text = "Cost"
+font_size = 20
+pixel_size = 0.003
+outline_size = 0
+modulate = Color(0.32, 0.25, 0.37, 1)
+
+[node name="Speed" type="Label3D" parent="."]
+position = Vector3(0.43, 1.32, 0.065)
+text = "Speed"
+font_size = 20
+pixel_size = 0.003
+outline_size = 0
+modulate = Color(0.32, 0.25, 0.37, 1)
+
+[node name="Control" type="Label3D" parent="."]
+position = Vector3(-0.32, 1.16, 0.065)
+text = "Command & control"
+font_size = 15
+pixel_size = 0.003
+outline_size = 0
+modulate = Color(0.32, 0.25, 0.37, 1)
+
+[node name="Autonomy" type="Label3D" parent="."]
+position = Vector3(0.34, 1.16, 0.065)
+text = "Team autonomy"
+font_size = 15
+pixel_size = 0.003
+outline_size = 0
+modulate = Color(0.32, 0.25, 0.37, 1)
+
+[node name="Approach" type="Marker3D" parent="."]
+position = Vector3(0, 0, 0.7)
