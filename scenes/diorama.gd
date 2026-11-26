@@ -800,7 +800,7 @@ func _make_strategy_board() -> void:
 		strategy_board = preload("res://scenes/StrategyBoard.tscn").instantiate() as Node3D
 		boardroom_root.add_child(strategy_board)
 		strategy_board.position = Vector3(4.1,0,-0.8)
-	interact_meshes["Strategy"] = strategy_board.get_node("Paper")
+	interact_meshes["Strategy"] = strategy_board.get_node("BoardSurface/Paper")
 	interaction_settings["Strategy"] = {"prompt":"View strategy board","distance":1.4,"color":Color(0.65,0.35,1.0,0.25)}
 	_update_strategy_markers()
 	strategy_board.visible = false
