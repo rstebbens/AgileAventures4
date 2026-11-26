@@ -26,6 +26,12 @@ var highlight_material: StandardMaterial3D
 @export var idle_animation_speed := 1.5
 var choice := ""
 var factory_seen := false
+var strategy_board: Node3D
+var strategy_marker: MeshInstance3D
+var autonomy_marker: MeshInstance3D
+var strategy := Vector3(0.45, 0.10, 0.45)
+var autonomy := 0.25
+var recovery_discussed := false
 var dialogue_lines: Array[String] = []
 var line_number := 0
 var after_dialogue := ""
@@ -67,6 +73,7 @@ func _ready() -> void:
 		_make_boardroom()
 		_make_factory()
 	factory_root.visible = false
+	_make_strategy_board()
 	_make_ui()
 	_setup_interaction_hint()
 	panel.visible = false
@@ -497,13 +504,22 @@ func _advance() -> void:
 		_buttons(["Speed", "Comfort", "Cost"], func(value): _decide(value))
 	elif after_dialogue == "factory":
 		_start_factory()
+	elif after_dialogue == "strategy_recovery":
+		recovery_discussed = true
+		strategy = Vector3(0.35, 0.35, 0.30)
+		autonomy = 0.45
+		_update_strategy_markers()
+		phase = "explore"
+		panel.visible = false
 	else:
 		phase = "explore"
 		panel.visible = false
 
 func _interact(name: String) -> void:
 	if name == "Martin":
-		if choice != "":
+		if factory_seen and not recovery_discussed:
+			_say(["DAVE: Three bikes, none accepted. Can we investigate the failure before producing more?", "MARTIN: Fine. Let the team investigate."] , "strategy_recovery")
+		elif choice != "":
 			_say(["MARTIN: We already committed to " + choice.to_lower() + ".", "DAVE (to camera): Apparently repeating it makes it a strategy."])
 		else:
 			_say(["MARTIN: Halvefords want 1,200 bikes by Christmas.", "DAVE: Why 27 gears and not 18?", "MARTIN: Twelve-year-olds prefer more gears.", "DAVE: Who's our target demographic?", "MARTIN: Middle-aged divorcees. Essentially the same thing.", "DAVE (to camera): You're hearing this too, right?"], "decision")
@@ -551,6 +567,9 @@ func _factory_beat() -> void:
 	else:
 		_buttons(["Return to boardroom"], func(_unused):
 			factory_seen = true
+			strategy_board.visible = true
+			objects["Strategy"] = strategy_board.position + Vector3(0,0,0.7)
+			title_label.text = "3 produced / 0 accepted | Strategy board unlocked"
 			factory_root.visible = false
 			boardroom_root.visible = true
 			phase = "explore"
@@ -648,6 +667,9 @@ func _update_interaction_hint() -> void:
 func _inspect_object(name: String) -> void:
 	auto_walk = false
 	dave.velocity = Vector3.ZERO
+	if name == "Strategy":
+		_say(["OUR STRATEGY: The triangle shows current priorities: cost, quality and speed. The scale shows team autonomy.", "DAVE: I cannot move these directly. Our conversations and decisions influence them."])
+		return
 	if name == "Martin":
 		_interact(name)
 		return
@@ -772,3 +794,48 @@ func _load_rooms() -> void:
 		if mesh != null:
 			interact_meshes[key] = mesh
 	_spawn_dave((boardroom_root.get_node("DaveSpawn") as Marker3D).position)
+
+# Read-only physical strategy prop. Prototype positions are not production maths.
+func _make_strategy_board() -> void:
+	strategy_board = Node3D.new()
+	strategy_board.name = "StrategyBoard"
+	boardroom_root.add_child(strategy_board)
+	strategy_board.position = Vector3(4.1,0,-0.8)
+	var paper := _block(strategy_board,Vector3(0,1.55,0),Vector3(1.25,1.45,0.08),Color("#fff4df"))
+	interact_meshes["Strategy"] = paper
+	interaction_settings["Strategy"] = {"prompt":"View strategy board","distance":1.4,"color":Color(0.65,0.35,1.0,0.25)}
+	for x in [-0.48,0.48]:
+		_block(strategy_board,Vector3(x,0.46,0),Vector3(0.07,0.92,0.12),Color("#55515b"))
+	_block(strategy_board,Vector3(0,0.15,-0.23),Vector3(0.08,0.3,0.5),Color("#55515b"))
+	var ink := Color("#51415e")
+	var a := Vector3(-0.43,1.40,0.06)
+	var b := Vector3(0,2.00,0.06)
+	var c := Vector3(0.43,1.40,0.06)
+	_ink(strategy_board,a,b,0.009,ink)
+	_ink(strategy_board,b,c,0.009,ink)
+	_ink(strategy_board,c,a,0.009,ink)
+	_ink(strategy_board,Vector3(-0.46,1.05,0.06),Vector3(0.46,1.05,0.06),0.009,ink)
+	_strategy_label("OUR STRATEGY",Vector3(0,2.19,0.065),28)
+	_strategy_label("Quality",Vector3(0,2.08,0.065),20)
+	_strategy_label("Cost",Vector3(-0.43,1.32,0.065),20)
+	_strategy_label("Speed",Vector3(0.43,1.32,0.065),20)
+	_strategy_label("Command & control",Vector3(-0.32,1.16,0.065),15)
+	_strategy_label("Team autonomy",Vector3(0.34,1.16,0.065),15)
+	strategy_marker = _sphere(strategy_board,Vector3.ZERO,0.055,Color("#7950a4"))
+	autonomy_marker = _sphere(strategy_board,Vector3.ZERO,0.045,Color("#7950a4"))
+	_update_strategy_markers()
+	strategy_board.visible = false
+
+func _strategy_label(words: String, at: Vector3, size: int) -> void:
+	var label := Label3D.new()
+	label.text = words
+	label.font_size = size
+	label.pixel_size = 0.003
+	label.outline_size = 0
+	label.modulate = Color("#51415e")
+	strategy_board.add_child(label)
+	label.position = at
+
+func _update_strategy_markers() -> void:
+	strategy_marker.position = Vector3(-0.43,1.40,0.10)*strategy.x + Vector3(0,2.00,0.10)*strategy.y + Vector3(0.43,1.40,0.10)*strategy.z
+	autonomy_marker.position = Vector3(lerpf(-0.46,0.46,autonomy),1.05,0.10)
