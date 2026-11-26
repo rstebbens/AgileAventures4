@@ -1,0 +1,170 @@
+[gd_scene load_steps=11 format=3 uid="uid://ct8sc0l5b27ha"]
+
+[ext_resource type="Script" path="res://scenes/strategy_board.gd" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="Frame"]
+albedo_color = Color(0.34014, 0.329932, 0.370774, 1)
+
+[sub_resource type="BoxMesh" id="Box"]
+
+[sub_resource type="StandardMaterial3D" id="Paper"]
+albedo_color = Color(1, 0.96, 0.87, 1)
+
+[sub_resource type="StandardMaterial3D" id="Ink"]
+albedo_color = Color(0.32, 0.25, 0.37, 1)
+
+[sub_resource type="StandardMaterial3D" id="Purple"]
+albedo_color = Color(0.47, 0.31, 0.64, 1)
+
+[sub_resource type="SphereMesh" id="Sphere"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_p8bec"]
+
+[sub_resource type="PrismMesh" id="PrismMesh_icfrj"]
+uv2_padding = 0.77
+left_to_right = -1.8
+size = Vector3(0.1, 0.1, 0.1)
+
+[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_m0qae"]
+albedo_color = Color(1, 0.215686, 0.054902, 1)
+
+[node name="StrategyBoard" type="Node3D"]
+script = ExtResource("1")
+metadata/_edit_group_ = true
+
+[node name="Tripod" type="Node3D" parent="."]
+metadata/_edit_group_ = true
+
+[node name="LeftLeg" type="MeshInstance3D" parent="Tripod"]
+transform = Transform3D(0.055, 0, 0, 0, 1.82537, 0.0111798, 0, -0.378955, 0.0538518, -0.48, 0.935925, -0.0177965)
+material_override = SubResource("Frame")
+mesh = SubResource("Box")
+
+[node name="RightLeg" type="MeshInstance3D" parent="Tripod"]
+transform = Transform3D(0.0538679, -0.376303, 1.16415e-10, 0.0109271, 1.79723, 0.00971247, -0.00196044, -0.322441, 0.0541356, 0.48, 0.931098, -0.0553591)
+material_override = SubResource("Frame")
+mesh = SubResource("Box")
+
+[node name="RearLeg" type="MeshInstance3D" parent="Tripod"]
+transform = Transform3D(0.0549066, 0.100284, -2.32831e-10, -0.00298435, 1.60134, -0.0199889, -0.00116422, 0.624699, 0.0512391, -0.026568, 0.818191, -0.542519)
+material_override = SubResource("Frame")
+mesh = SubResource("Box")
+
+[node name="BoardSurface" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.978148, 0.207912, 0, -0.207912, 0.978148, 0, 0.82, 0)
+metadata/_edit_group_ = true
+
+[node name="Backing" type="MeshInstance3D" parent="BoardSurface"]
+transform = Transform3D(1.31, 0, 0, 0, 1.49, 0, 0, 0, 0.065, 0, 0.73, -0.045)
+material_override = SubResource("Frame")
+mesh = SubResource("Box")
+
+[node name="Paper" type="MeshInstance3D" parent="BoardSurface"]
+transform = Transform3D(1.25, 0, 0, 0, 1.45, 0, 0, 0, 0.08, 0, 0.73, 0)
+material_override = SubResource("Paper")
+mesh = SubResource("Box")
+
+[node name="TopClamp" type="MeshInstance3D" parent="BoardSurface"]
+transform = Transform3D(1.22, 0, 0, 0, 0.055, 0, 0, 0, 0.065, 0, 1.43, 0.055)
+material_override = SubResource("Frame")
+mesh = SubResource("Box")
+
+[node name="PenTray" type="MeshInstance3D" parent="BoardSurface"]
+transform = Transform3D(1.28, 0, 0, 0, 0.045, 0, 0, 0, 0.19, 0, 0.025, 0.09)
+material_override = SubResource("Frame")
+mesh = SubResource("Box")
+
+[node name="StrategyDisplay" type="Node3D" parent="BoardSurface"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.82, 1.49012e-08)
+metadata/_edit_group_ = true
+
+[node name="TriangleLeft" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(0.43, -0.0146307, 0, 0.6, 0.0104853, 0, 0, 0, 0.018, -0.215, 1.7, 0.06)
+material_override = SubResource("Ink")
+mesh = SubResource("Box")
+
+[node name="TriangleRight" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(0.43, 0.0146307, 0, -0.6, 0.0104853, 0, 0, 0, 0.018, 0.215, 1.7, 0.06)
+material_override = SubResource("Ink")
+mesh = SubResource("Box")
+
+[node name="TriangleBase" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(0.86, 0, 0, 0, 0.018, 0, 0, 0, 0.018, 0, 1.4, 0.06)
+material_override = SubResource("Ink")
+mesh = SubResource("Box")
+
+[node name="AutonomyScale" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(0.92, 0, 0, 0, 0.018, 0, 0, 0, 0.018, 0, 1.05, 0.06)
+material_override = SubResource("Ink")
+mesh = SubResource("Box")
+
+[node name="StrategyMarker" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(0.11, 0, 0, 0, 0.11, 0, 0, 0, 0.11, 0, 1.46, 0.1)
+material_override = SubResource("Purple")
+mesh = SubResource("Sphere")
+
+[node name="AutonomyMarker" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, -0.23, 1.05, 0.1)
+material_override = SubResource("Purple")
+mesh = SubResource("Sphere")
+
+[node name="Heading" type="Label3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.19, 0.065)
+pixel_size = 0.003
+modulate = Color(0.32, 0.25, 0.37, 1)
+text = "OUR STRATEGY"
+font_size = 28
+outline_size = 0
+
+[node name="Quality" type="Label3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.08, 0.065)
+pixel_size = 0.003
+modulate = Color(0.32, 0.25, 0.37, 1)
+text = "Quality"
+font_size = 20
+outline_size = 0
+
+[node name="Cost" type="Label3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43, 1.32, 0.065)
+pixel_size = 0.003
+modulate = Color(0.32, 0.25, 0.37, 1)
+text = "Cost"
+font_size = 20
+outline_size = 0
+
+[node name="Speed" type="Label3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.43, 1.32, 0.065)
+pixel_size = 0.003
+modulate = Color(0.32, 0.25, 0.37, 1)
+text = "Speed"
+font_size = 20
+outline_size = 0
+
+[node name="Control" type="Label3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.16, 0.065)
+pixel_size = 0.003
+modulate = Color(0.32, 0.25, 0.37, 1)
+text = "Command & control"
+font_size = 15
+outline_size = 0
+
+[node name="Autonomy" type="Label3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 1.16, 0.065)
+pixel_size = 0.003
+modulate = Color(0.32, 0.25, 0.37, 1)
+text = "Team autonomy"
+font_size = 15
+outline_size = 0
+
+[node name="Pen" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay"]
+transform = Transform3D(-0.0192295, 0.0797291, -0.0014531, 0.00456558, 0.00637292, 0.0644951, 0.0405317, 0.0371081, -0.00795427, -0.421064, 0.900061, 0.0997266)
+material_override = SubResource("Frame")
+mesh = SubResource("CylinderMesh_p8bec")
+
+[node name="PenTip" type="MeshInstance3D" parent="BoardSurface/StrategyDisplay/Pen"]
+transform = Transform3D(1.00217, 3.60538, 0.437476, -3.33479, 1.08605, 0.0406993, 0.0398884, 0.213671, -7.58859, 0.219743, 0.724977, 0.0648215)
+mesh = SubResource("PrismMesh_icfrj")
+surface_material_override/0 = SubResource("ORMMaterial3D_m0qae")
+
+[node name="Approach" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.7)
