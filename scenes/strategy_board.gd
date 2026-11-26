@@ -8,5 +8,5 @@ func set_orientation(priorities: Vector3, autonomy: float) -> void:
 		weights = Vector3.ONE / 3.0
 	else:
 		weights /= total
-	$StrategyMarker.position = Vector3(-0.43,1.40,0.10)*weights.x + Vector3(0,2.00,0.10)*weights.y + Vector3(0.43,1.40,0.10)*weights.z
-	$AutonomyMarker.position = Vector3(lerpf(-0.46,0.46,clampf(autonomy,0,1)),1.05,0.10)
+	$BoardSurface/StrategyDisplay/StrategyMarker.position = Vector3(-0.43,1.40,0.10)*weights.x + Vector3(0,2.00,0.10)*weights.y + Vector3(0.43,1.40,0.10)*weights.z
+	$BoardSurface/StrategyDisplay/AutonomyMarker.position = Vector3(lerpf(-0.46,0.46,clampf(autonomy,0,1)),1.05,0.10)
