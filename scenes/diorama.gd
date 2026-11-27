@@ -26,6 +26,10 @@ var highlight_material: StandardMaterial3D
 @export var idle_animation_speed := 1.5
 var choice := ""
 var factory_seen := false
+var strategy_board: Node3D
+var strategy := Vector3(0.45, 0.10, 0.45)
+var autonomy := 0.25
+var recovery_discussed := false
 var dialogue_lines: Array[String] = []
 var line_number := 0
 var after_dialogue := ""
@@ -67,6 +71,7 @@ func _ready() -> void:
 		_make_boardroom()
 		_make_factory()
 	factory_root.visible = false
+	_make_strategy_board()
 	_make_ui()
 	_setup_interaction_hint()
 	panel.visible = false
@@ -497,13 +502,22 @@ func _advance() -> void:
 		_buttons(["Speed", "Comfort", "Cost"], func(value): _decide(value))
 	elif after_dialogue == "factory":
 		_start_factory()
+	elif after_dialogue == "strategy_recovery":
+		recovery_discussed = true
+		strategy = Vector3(0.35, 0.35, 0.30)
+		autonomy = 0.45
+		_update_strategy_markers()
+		phase = "explore"
+		panel.visible = false
 	else:
 		phase = "explore"
 		panel.visible = false
 
 func _interact(name: String) -> void:
 	if name == "Martin":
-		if choice != "":
+		if factory_seen and not recovery_discussed:
+			_say(["DAVE: Three bikes, none accepted. Can we investigate the failure before producing more?", "MARTIN: Fine. Let the team investigate."] , "strategy_recovery")
+		elif choice != "":
 			_say(["MARTIN: We already committed to " + choice.to_lower() + ".", "DAVE (to camera): Apparently repeating it makes it a strategy."])
 		else:
 			_say(["MARTIN: Halvefords want 1,200 bikes by Christmas.", "DAVE: Why 27 gears and not 18?", "MARTIN: Twelve-year-olds prefer more gears.", "DAVE: Who's our target demographic?", "MARTIN: Middle-aged divorcees. Essentially the same thing.", "DAVE (to camera): You're hearing this too, right?"], "decision")
@@ -551,6 +565,9 @@ func _factory_beat() -> void:
 	else:
 		_buttons(["Return to boardroom"], func(_unused):
 			factory_seen = true
+			strategy_board.visible = true
+			objects["Strategy"] = boardroom_root.to_local(strategy_board.get_node("Approach").global_position)
+			title_label.text = "3 produced / 0 accepted | Strategy board unlocked"
 			factory_root.visible = false
 			boardroom_root.visible = true
 			phase = "explore"
@@ -648,6 +665,9 @@ func _update_interaction_hint() -> void:
 func _inspect_object(name: String) -> void:
 	auto_walk = false
 	dave.velocity = Vector3.ZERO
+	if name == "Strategy":
+		_say(["OUR STRATEGY: The triangle shows current priorities: cost, quality and speed. The scale shows team autonomy.", "DAVE: I cannot move these directly. Our conversations and decisions influence them."])
+		return
 	if name == "Martin":
 		_interact(name)
 		return
@@ -772,3 +792,18 @@ func _load_rooms() -> void:
 		if mesh != null:
 			interact_meshes[key] = mesh
 	_spawn_dave((boardroom_root.get_node("DaveSpawn") as Marker3D).position)
+
+# The editable room owns placement; the game owns unlock and strategic state.
+func _make_strategy_board() -> void:
+	strategy_board = boardroom_root.get_node_or_null("StrategyBoard") as Node3D
+	if strategy_board == null:
+		strategy_board = preload("res://scenes/StrategyBoard.tscn").instantiate() as Node3D
+		boardroom_root.add_child(strategy_board)
+		strategy_board.position = Vector3(4.1,0,-0.8)
+	interact_meshes["Strategy"] = strategy_board.get_node("BoardSurface/Paper")
+	interaction_settings["Strategy"] = {"prompt":"View strategy board","distance":1.4,"color":Color(0.65,0.35,1.0,0.25)}
+	_update_strategy_markers()
+	strategy_board.visible = false
+
+func _update_strategy_markers() -> void:
+	strategy_board.call("set_orientation", strategy, autonomy)

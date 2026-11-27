@@ -1,6 +1,8 @@
-[gd_scene load_steps=602 format=3 uid="uid://dietgrg8463a"]
+[gd_scene load_steps=603 format=3 uid="uid://dietgrg8463a"]
 
 [ext_resource type="Script" uid="uid://djcx0as5iyq5i" path="res://scenes/interaction_point.gd" id="1_interact"]
+
+[ext_resource type="PackedScene" path="res://scenes/StrategyBoard.tscn" id="2_strategy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8u664"]
 albedo_color = Color(0.329412, 0.282353, 0.243137, 1)
@@ -3753,3 +3755,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3, 0.06, 1.35)
 
 [node name="Martin" type="Marker3D" parent="InteractionPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 0.06, 0.8)
+
+[node name="StrategyBoard" parent="." instance=ExtResource("2_strategy")]
+position = Vector3(4.1, 0, -0.8)
