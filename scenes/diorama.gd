@@ -566,6 +566,7 @@ func _factory_beat() -> void:
 		_buttons(["Return to boardroom"], func(_unused):
 			factory_seen = true
 			strategy_board.visible = true
+			strategy_board.get_node("PhysicalBody/CollisionShape3D").set_deferred("disabled", false)
 			objects["Strategy"] = boardroom_root.to_local(strategy_board.get_node("Approach").global_position)
 			title_label.text = "3 produced / 0 accepted | Strategy board unlocked"
 			factory_root.visible = false
@@ -803,6 +804,7 @@ func _make_strategy_board() -> void:
 	interaction_settings["Strategy"] = {"prompt":"View strategy board","distance":1.4,"color":Color(0.65,0.35,1.0,0.25)}
 	_update_strategy_markers()
 	strategy_board.visible = false
+	strategy_board.get_node("PhysicalBody/CollisionShape3D").set_deferred("disabled", true)
 
 func _update_strategy_markers() -> void:
 	strategy_board.call("set_orientation", strategy, autonomy)
