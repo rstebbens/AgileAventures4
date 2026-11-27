@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://v2oisq36skui"]
+[gd_scene load_steps=12 format=3 uid="uid://v2oisq36skui"]
 
 [ext_resource type="Script" uid="uid://x47aioyknoqh" path="res://scenes/strategy_board.gd" id="1"]
 
@@ -27,6 +27,9 @@ size = Vector3(0.1, 0.1, 0.1)
 
 [sub_resource type="ORMMaterial3D" id="ORMMaterial3D_m0qae"]
 albedo_color = Color(1, 0.215686, 0.054902, 1)
+
+[sub_resource type="BoxShape3D" id="BoardCollision"]
+size = Vector3(1.32, 1.9, 0.85)
 
 [node name="StrategyBoard" type="Node3D"]
 script = ExtResource("1")
@@ -168,3 +171,9 @@ surface_material_override/0 = SubResource("ORMMaterial3D_m0qae")
 
 [node name="Approach" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.7)
+
+[node name="PhysicalBody" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicalBody"]
+position = Vector3(0, 0.95, -0.25)
+shape = SubResource("BoardCollision")
