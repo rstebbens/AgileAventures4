@@ -1,5 +1,8 @@
 extends Node3D
 
+var content = preload("res://scenes/narrative_content.gd").new()
+var state = preload("res://scenes/game_state.gd").new()
+
 # Procedural 3D vertical slice: fixed orthographic camera, walkable boardroom,
 # decision lock and a factory reveal. Meshes are temporary until authored assets arrive.
 const WALK_SPEED := 3.0
@@ -24,12 +27,12 @@ var highlight_material: StandardMaterial3D
 @export var walk_speed := 1.5
 @export var walk_animation_speed := 2.5
 @export var idle_animation_speed := 1.5
-var choice := ""
-var factory_seen := false
+
+
 var strategy_board: Node3D
-var strategy := Vector3(0.45, 0.10, 0.45)
-var autonomy := 0.25
-var recovery_discussed := false
+
+
+
 var dialogue_lines: Array[String] = []
 var line_number := 0
 var after_dialogue := ""
@@ -58,6 +61,11 @@ var palette := {
 }
 
 func _ready() -> void:
+	if not content.load_content():
+		push_error("Narrative content could not be loaded; stopping AA4 startup.")
+		set_physics_process(false)
+		set_process_unhandled_input(false)
+		return
 	_setup_world()
 	if bake_environments:
 		_make_boardroom()
@@ -498,14 +506,16 @@ func _advance() -> void:
 		_show_line()
 	elif after_dialogue == "decision":
 		phase = "decision"
-		message.text = "MARTIN: What are we prioritizing?"
-		_buttons(["Speed", "Comfort", "Cost"], func(value): _decide(value))
+		message.text = str(content.data["decision"]["prompt"])
+		var options: Array[String] = []
+		options.assign(content.data["decision"]["options"])
+		_buttons(options, func(value): _decide(value))
 	elif after_dialogue == "factory":
 		_start_factory()
 	elif after_dialogue == "strategy_recovery":
-		recovery_discussed = true
-		strategy = Vector3(0.35, 0.35, 0.30)
-		autonomy = 0.45
+		state.recovery_discussed = true
+		state.strategy = Vector3(0.35, 0.35, 0.30)
+		state.autonomy = 0.45
 		_update_strategy_markers()
 		phase = "explore"
 		panel.visible = false
@@ -515,43 +525,41 @@ func _advance() -> void:
 
 func _interact(name: String) -> void:
 	if name == "Martin":
-		if factory_seen and not recovery_discussed:
-			_say(["DAVE: Three bikes, none accepted. Can we investigate the failure before producing more?", "MARTIN: Fine. Let the team investigate."] , "strategy_recovery")
-		elif choice != "":
-			_say(["MARTIN: We already committed to " + choice.to_lower() + ".", "DAVE (to camera): Apparently repeating it makes it a strategy."])
+		if state.factory_seen and not state.recovery_discussed:
+			_say(content.lines("SC005"), "strategy_recovery")
+		elif state.recovery_discussed:
+			_say(content.lines("investigating"))
+		elif state.choice != "":
+			_say(content.lines("committed", {"choice": state.choice.to_lower()}))
 		else:
-			_say(["MARTIN: Halvefords want 1,200 bikes by Christmas.", "DAVE: Why 27 gears and not 18?", "MARTIN: Twelve-year-olds prefer more gears.", "DAVE: Who's our target demographic?", "MARTIN: Middle-aged divorcees. Essentially the same thing.", "DAVE (to camera): You're hearing this too, right?"], "decision")
+			_say(content.lines("SC001"), "decision")
 	elif name == "Research":
-		_say(["RESEARCH: Twelve children surveyed. Preferred gear count: 27.", "DAVE: That is a sample size, not a strategy."])
+		_say(content.lines("research"))
 	elif name == "Order":
-		_say(["HALVEFORDS ORDER: 1,200 bicycles. Christmas deadline.", "DAVE: A deadline is not a product vision."])
+		_say(content.lines("order"))
 	elif name == "Coffee":
-		_say(["DAVE: At least the coffee machine knows what it's here for."])
+		_say(content.lines("coffee"))
 	elif name == "Dashboard":
-		if choice == "":
-			_say(["DASHBOARD: No strategy selected."])
-		elif not factory_seen:
-			_say(["DAVE: Perhaps we should visit the factory first."])
+		if state.choice == "":
+			_say(content.lines("dashboard_initial"))
+		elif not state.factory_seen:
+			_say(content.lines("dashboard_pending"))
 		else:
 			var summary := {"Speed": "Delivered quickly. Brakes omitted.", "Comfort": "Unrequested suspension. Costs and delays increase.", "Cost": "Basic brakes. Premium braking subscription."}
-			_say(["DASHBOARD: " + summary[choice], "DAVE: A decision has consequences. Who knew?"])
+			_say(["DASHBOARD: " + summary[state.choice], "DAVE: A decision has consequences. Who knew?"])
 
 func _decide(value: String) -> void:
-	if choice != "":
+	if state.choice != "":
 		return
-	choice = value
-	_say(["MARTIN: Excellent. I'll tell the factory to prioritize " + value.to_lower() + ".", "DAVE (to camera): I have a feeling we should see this for ourselves."], "factory")
+	state.choice = value
+	_say(content.lines("commit", {"choice": value.to_lower()}), "factory")
 
 func _start_factory() -> void:
 	boardroom_root.visible = false
 	factory_root.visible = true
 	phase = "factory"
-	var consequences := {
-		"Speed": ["FACTORY: Bicycles move through assembly at record speed.", "WORKER: We've removed the brake installation step.", "DAVE (to camera): No brakes. What could possibly slow us down?"],
-		"Comfort": ["FACTORY: Premium suspension is fitted to every bicycle.", "WORKER: Nobody asked for it, and production takes twice as long.", "DAVE (to camera): We're solving a problem nobody has."],
-		"Cost": ["FACTORY: Every bicycle receives basic working brakes.", "WORKER: Better stopping power is available on subscription.", "DAVE (to camera): Brakes as a service. Of course."]
-	}
-	dialogue_lines.assign(consequences[choice])
+	var consequences: Dictionary = content.data.get("factory", {})
+	dialogue_lines.assign(consequences[state.choice])
 	line_number = 0
 	_factory_beat()
 
@@ -564,14 +572,14 @@ func _factory_beat() -> void:
 		)
 	else:
 		_buttons(["Return to boardroom"], func(_unused):
-			factory_seen = true
+			state.factory_seen = true
 			strategy_board.visible = true
 			strategy_board.get_node("PhysicalBody/CollisionShape3D").set_deferred("disabled", false)
 			objects["Strategy"] = boardroom_root.to_local(strategy_board.get_node("Approach").global_position)
 			title_label.text = "3 produced / 0 accepted | Strategy board unlocked"
 			factory_root.visible = false
 			boardroom_root.visible = true
-			_say(["DAVE: Three bikes produced. Three rejected. We have been busy, but achieved absolutely nothing.", "MARTIN: So what do we do differently?", "DAVE: We need a strategy. Take a look at the new flip chart."])
+			_say(content.lines("SC003"))
 		)
 
 func _physics_process(delta: float) -> void:
@@ -666,7 +674,7 @@ func _inspect_object(name: String) -> void:
 	auto_walk = false
 	dave.velocity = Vector3.ZERO
 	if name == "Strategy":
-		_say(["DAVE: We know what we need to achieve: 1,200 bikes for Halvefords. What we have not agreed is how.", "DAVE: The triangle shows our current balance of cost, quality and speed. The scale shows how much decision-making sits with management or the team.", "DAVE: You cannot move these markers directly. Your conversations, decisions and actions influence them.", "DAVE: Watch how our strategy evolves and what happens to our results."])
+		_say(content.lines("SC004"))
 		return
 	if name == "Martin":
 		_interact(name)
@@ -674,16 +682,11 @@ func _inspect_object(name: String) -> void:
 	phase = "inspect"
 	emote = "neutral"
 	panel.visible = true
-	var details := {
-		"Dashboard": "SALES TARGETS   |   Halvefords\n1,200 bicycles  •  Delivery: Christmas\nProduct strategy: Not defined",
-		"Research": "CUSTOMER RESEARCH\n12 children surveyed. Preferred gear count: 27.",
-		"Order": "HALVEFORDS ORDER\n1,200 bicycles. Christmas deadline.",
-		"Coffee": "DAVE: At least the coffee machine knows what it's here for."
-	}
+	var details: Dictionary = content.data.get("details", {})
 	message.text = str(interaction_settings.get(name, {}).get("text", details.get(name, "")))
-	if name == "Dashboard" and factory_seen:
-		var results := {"Speed":"Delivered quickly. Brakes omitted.", "Comfort":"Unrequested suspension. Costs and delays increase.", "Cost":"Basic brakes. Premium braking subscription."}
-		message.text += "\nOutcome: " + results.get(choice, "")
+	if name == "Dashboard" and state.factory_seen:
+		var results: Dictionary = content.data.get("results", {})
+		message.text += "\nOutcome: " + results.get(state.choice, "")
 	_buttons([], func(_unused): pass)
 
 func _dismiss_panel() -> void:
@@ -807,4 +810,4 @@ func _make_strategy_board() -> void:
 	strategy_board.get_node("PhysicalBody/CollisionShape3D").set_deferred("disabled", true)
 
 func _update_strategy_markers() -> void:
-	strategy_board.call("set_orientation", strategy, autonomy)
+	strategy_board.call("set_orientation", state.strategy, state.autonomy)

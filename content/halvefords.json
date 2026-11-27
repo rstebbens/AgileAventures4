@@ -1,0 +1,91 @@
+{
+  "dialogue": {
+    "SC005": [
+      "DAVE: Three bikes, none accepted. Can we investigate the failure before producing more?",
+      "MARTIN: Fine. Let the team investigate."
+    ],
+    "SC001": [
+      "MARTIN: Halvefords want 1,200 bikes by Christmas.",
+      "DAVE: Why 27 gears and not 18?",
+      "MARTIN: Twelve-year-olds prefer more gears.",
+      "DAVE: Who's our target demographic?",
+      "MARTIN: Middle-aged divorcees. Essentially the same thing.",
+      "DAVE (to camera): You're hearing this too, right?"
+    ],
+    "research": [
+      "RESEARCH: Twelve children surveyed. Preferred gear count: 27.",
+      "DAVE: That is a sample size, not a strategy."
+    ],
+    "order": [
+      "HALVEFORDS ORDER: 1,200 bicycles. Christmas deadline.",
+      "DAVE: A deadline is not a product vision."
+    ],
+    "coffee": [
+      "DAVE: At least the coffee machine knows what it's here for."
+    ],
+    "dashboard_initial": [
+      "DASHBOARD: No strategy selected."
+    ],
+    "dashboard_pending": [
+      "DAVE: Perhaps we should visit the factory first."
+    ],
+    "SC003": [
+      "DAVE: Three bikes produced. Three rejected. We have been busy, but achieved absolutely nothing.",
+      "MARTIN: So what do we do differently?",
+      "DAVE: We need a strategy. Take a look at the new flip chart."
+    ],
+    "SC004": [
+      "DAVE: We know what we need to achieve: 1,200 bikes for Halvefords. What we have not agreed is how.",
+      "DAVE: The triangle shows our current balance of cost, quality and speed. The scale shows how much decision-making sits with management or the team.",
+      "DAVE: You cannot move these markers directly. Your conversations, decisions and actions influence them.",
+      "DAVE: Watch how our strategy evolves and what happens to our results."
+    ],
+    "committed": [
+      "MARTIN: We already committed to {choice}.",
+      "DAVE (to camera): Apparently repeating it makes it a strategy."
+    ],
+    "commit": [
+      "MARTIN: Excellent. I'll tell the factory to prioritize {choice}.",
+      "DAVE (to camera): I have a feeling we should see this for ourselves."
+    ],
+    "investigating": [
+      "MARTIN: The team are investigating. Maybe check with them?"
+    ]
+  },
+  "details": {
+    "Dashboard": "SALES TARGETS   |   Halvefords\n1,200 bicycles  •  Delivery: Christmas\nProduct strategy: Not defined",
+    "Research": "CUSTOMER RESEARCH\n12 children surveyed. Preferred gear count: 27.",
+    "Order": "HALVEFORDS ORDER\n1,200 bicycles. Christmas deadline.",
+    "Coffee": "DAVE: At least the coffee machine knows what it's here for."
+  },
+  "results": {
+    "Speed": "Delivered quickly. Brakes omitted.",
+    "Comfort": "Unrequested suspension. Costs and delays increase.",
+    "Cost": "Basic brakes. Premium braking subscription."
+  },
+  "factory": {
+    "Speed": [
+      "FACTORY: Bicycles move through assembly at record speed.",
+      "WORKER: We've removed the brake installation step.",
+      "DAVE (to camera): No brakes. What could possibly slow us down?"
+    ],
+    "Comfort": [
+      "FACTORY: Premium suspension is fitted to every bicycle.",
+      "WORKER: Nobody asked for it, and production takes twice as long.",
+      "DAVE (to camera): We're solving a problem nobody has."
+    ],
+    "Cost": [
+      "FACTORY: Every bicycle receives basic working brakes.",
+      "WORKER: Better stopping power is available on subscription.",
+      "DAVE (to camera): Brakes as a service. Of course."
+    ]
+  },
+  "decision": {
+    "prompt": "MARTIN: What are we prioritizing?",
+    "options": [
+      "Speed",
+      "Comfort",
+      "Cost"
+    ]
+  }
+}
