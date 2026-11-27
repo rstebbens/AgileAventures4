@@ -570,8 +570,7 @@ func _factory_beat() -> void:
 			title_label.text = "3 produced / 0 accepted | Strategy board unlocked"
 			factory_root.visible = false
 			boardroom_root.visible = true
-			phase = "explore"
-			panel.visible = false
+			_say(["DAVE: Three bikes produced. Three rejected. We have been busy, but achieved absolutely nothing.", "MARTIN: So what do we do differently?", "DAVE: We need a strategy. Take a look at the new flip chart."])
 		)
 
 func _physics_process(delta: float) -> void:
@@ -666,7 +665,7 @@ func _inspect_object(name: String) -> void:
 	auto_walk = false
 	dave.velocity = Vector3.ZERO
 	if name == "Strategy":
-		_say(["OUR STRATEGY: The triangle shows current priorities: cost, quality and speed. The scale shows team autonomy.", "DAVE: I cannot move these directly. Our conversations and decisions influence them."])
+		_say(["DAVE: We know what we need to achieve: 1,200 bikes for Halvefords. What we have not agreed is how.", "DAVE: The triangle shows our current balance of cost, quality and speed. The scale shows how much decision-making sits with management or the team.", "DAVE: You cannot move these markers directly. Your conversations, decisions and actions influence them.", "DAVE: Watch how our strategy evolves and what happens to our results."])
 		return
 	if name == "Martin":
 		_interact(name)
