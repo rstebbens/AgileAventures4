@@ -15,6 +15,12 @@ var martin: Node3D
 var camera: Camera3D
 var target := Vector3.ZERO
 var auto_walk := false
+var navigator = preload("res://scenes/player_navigation.gd").new()
+var walk_path := PackedVector3Array()
+var path_index := 0
+var route_pending := false
+var pending_interaction := ""
+var stuck_time := 0.0
 @export var bake_environments := false
 var phase := "explore"
 var nearby := ""
@@ -594,12 +600,28 @@ func _physics_process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S): move.z += 1
 	if move.length() > 0:
 		auto_walk = false
+		route_pending = false
+		pending_interaction = ""
 	elif auto_walk:
-		move = target - dave.position
-		move.y = 0
-		if move.length() < 0.12:
+		if route_pending:
+			walk_path = navigator.route(dave, boardroom_root.to_global(target))
+			path_index = 0
+			route_pending = false
+			stuck_time = 0.0
+		while path_index < walk_path.size():
+			move = walk_path[path_index] - dave.global_position
+			move.y = 0
+			if move.length() > 0.08:
+				break
+			path_index += 1
+		if path_index >= walk_path.size():
 			auto_walk = false
 			move = Vector3.ZERO
+			var destination_id := pending_interaction
+			pending_interaction = ""
+			if destination_id != "" and objects.has(destination_id) and dave.position.distance_to(objects[destination_id]) < float(interaction_settings.get(destination_id, {}).get("distance", 1.85)):
+				_inspect_object(destination_id)
+				return
 	if move.length() > 0:
 		var previous := dave.position
 		dave.velocity = move.normalized() * walk_speed
@@ -612,8 +634,14 @@ func _physics_process(delta: float) -> void:
 			_pose_dave("walk",delta)
 		else:
 			_pose_dave("neutral",delta)
-		if auto_walk and dave.get_slide_collision_count() > 0:
-			auto_walk = false
+		if auto_walk:
+			if dave.position.distance_to(previous) < 0.002:
+				stuck_time += delta
+			else:
+				stuck_time = 0.0
+			if stuck_time > 0.5:
+				auto_walk = false
+				pending_interaction = ""
 	else:
 		dave.velocity = Vector3.ZERO
 		idle_clock += delta
@@ -725,7 +753,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			if point.distance_to(at) < 0.85 or event.position.distance_to(screen_at) < 55:
 				_inspect_object(nearby)
 				return
-		target = point
+		pending_interaction = ""
+		var best_screen := 42.0
+		for key in objects:
+			var screen_point := camera.unproject_position(boardroom_root.to_global(objects[key] + Vector3(0, 1.0, 0)))
+			var screen_distance := event.position.distance_to(screen_point)
+			if screen_distance < best_screen:
+				best_screen = screen_distance
+				pending_interaction = key
+		target = objects[pending_interaction] if pending_interaction != "" else boardroom_root.to_local(point)
+		route_pending = true
 		auto_walk = true
 
 # One-off scene conversion. Run BakeEnvironments.tscn from the editor.
