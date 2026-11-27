@@ -506,8 +506,10 @@ func _advance() -> void:
 		_show_line()
 	elif after_dialogue == "decision":
 		phase = "decision"
-		message.text = "MARTIN: What are we prioritizing?"
-		_buttons(["Speed", "Comfort", "Cost"], func(value): _decide(value))
+		message.text = str(content.data["decision"]["prompt"])
+		var options: Array[String] = []
+		options.assign(content.data["decision"]["options"])
+		_buttons(options, func(value): _decide(value))
 	elif after_dialogue == "factory":
 		_start_factory()
 	elif after_dialogue == "strategy_recovery":
@@ -524,22 +526,22 @@ func _advance() -> void:
 func _interact(name: String) -> void:
 	if name == "Martin":
 		if state.factory_seen and not state.recovery_discussed:
-			_say(content.lines("dialogue_01"), "strategy_recovery")
+			_say(content.lines("SC005"), "strategy_recovery")
 		elif state.choice != "":
-			_say(["MARTIN: We already committed to " + state.choice.to_lower() + ".", "DAVE (to camera): Apparently repeating it makes it a strategy."])
+			_say(content.lines("committed", {"choice": state.choice.to_lower()}))
 		else:
-			_say(content.lines("dialogue_02"), "decision")
+			_say(content.lines("SC001"), "decision")
 	elif name == "Research":
-		_say(content.lines("dialogue_03"))
+		_say(content.lines("research"))
 	elif name == "Order":
-		_say(content.lines("dialogue_04"))
+		_say(content.lines("order"))
 	elif name == "Coffee":
-		_say(content.lines("dialogue_05"))
+		_say(content.lines("coffee"))
 	elif name == "Dashboard":
 		if state.choice == "":
-			_say(content.lines("dialogue_06"))
+			_say(content.lines("dashboard_initial"))
 		elif not state.factory_seen:
-			_say(content.lines("dialogue_07"))
+			_say(content.lines("dashboard_pending"))
 		else:
 			var summary := {"Speed": "Delivered quickly. Brakes omitted.", "Comfort": "Unrequested suspension. Costs and delays increase.", "Cost": "Basic brakes. Premium braking subscription."}
 			_say(["DASHBOARD: " + summary[state.choice], "DAVE: A decision has consequences. Who knew?"])
@@ -548,7 +550,7 @@ func _decide(value: String) -> void:
 	if state.choice != "":
 		return
 	state.choice = value
-	_say(["MARTIN: Excellent. I'll tell the factory to prioritize " + value.to_lower() + ".", "DAVE (to camera): I have a feeling we should see this for ourselves."], "factory")
+	_say(content.lines("commit", {"choice": value.to_lower()}), "factory")
 
 func _start_factory() -> void:
 	boardroom_root.visible = false
@@ -575,7 +577,7 @@ func _factory_beat() -> void:
 			title_label.text = "3 produced / 0 accepted | Strategy board unlocked"
 			factory_root.visible = false
 			boardroom_root.visible = true
-			_say(content.lines("dialogue_08"))
+			_say(content.lines("SC003"))
 		)
 
 func _physics_process(delta: float) -> void:
@@ -670,7 +672,7 @@ func _inspect_object(name: String) -> void:
 	auto_walk = false
 	dave.velocity = Vector3.ZERO
 	if name == "Strategy":
-		_say(content.lines("dialogue_09"))
+		_say(content.lines("SC004"))
 		return
 	if name == "Martin":
 		_interact(name)
