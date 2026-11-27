@@ -757,7 +757,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var best_screen := 42.0
 		for key in objects:
 			var screen_point := camera.unproject_position(boardroom_root.to_global(objects[key] + Vector3(0, 1.0, 0)))
-			var screen_distance := event.position.distance_to(screen_point)
+			var screen_distance: float = event.position.distance_to(screen_point)
 			if screen_distance < best_screen:
 				best_screen = screen_distance
 				pending_interaction = key
