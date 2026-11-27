@@ -47,6 +47,9 @@
     "commit": [
       "MARTIN: Excellent. I'll tell the factory to prioritize {choice}.",
       "DAVE (to camera): I have a feeling we should see this for ourselves."
+    ],
+    "investigating": [
+      "MARTIN: The team are investigating. Maybe check with them?"
     ]
   },
   "details": {
