@@ -527,6 +527,8 @@ func _interact(name: String) -> void:
 	if name == "Martin":
 		if state.factory_seen and not state.recovery_discussed:
 			_say(content.lines("SC005"), "strategy_recovery")
+		elif state.recovery_discussed:
+			_say(content.lines("investigating"))
 		elif state.choice != "":
 			_say(content.lines("committed", {"choice": state.choice.to_lower()}))
 		else:
